@@ -1,5 +1,31 @@
 # tech264-docker-kubernetes
 
+- [tech264-docker-kubernetes](#tech264-docker-kubernetes)
+- [Install Docker Desktop on your local machine](#install-docker-desktop-on-your-local-machine)
+  - [Installing Docker Desktop](#installing-docker-desktop)
+  - [Verify Docker Installation](#verify-docker-installation)
+  - [Check Docker Desktop Status](#check-docker-desktop-status)
+  - [Create Docker Hub Account \& Log in](#create-docker-hub-account--log-in)
+- [Differences between virtualisation and containerisation](#differences-between-virtualisation-and-containerisation)
+  - [Virtualisation vs. Containerisation](#virtualisation-vs-containerisation)
+  - [Virtualisation](#virtualisation)
+    - [Benefits](#benefits)
+  - [Containerisation](#containerisation)
+    - [Benefits](#benefits-1)
+  - [Key Differences](#key-differences)
+    - [Comparison Table: Virtualisation vs. Containerisation](#comparison-table-virtualisation-vs-containerisation)
+- [Microservices](#microservices)
+  - [What Are Microservices?](#what-are-microservices)
+  - [How Are They Made Possible?](#how-are-they-made-possible)
+    - [Benefits of Microservices](#benefits-of-microservices)
+- [Docker](#docker)
+  - [What Is Docker?](#what-is-docker)
+  - [Alternatives to Docker](#alternatives-to-docker)
+    - [How Docker Works (Docker Architecture/API)](#how-docker-works-docker-architectureapi)
+  - [Success Story Using Docker](#success-story-using-docker)
+    - [Concepts](#concepts)
+
+
 # Install Docker Desktop on your local machine
 Install Docker Desktop
 
