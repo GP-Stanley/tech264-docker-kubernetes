@@ -14,6 +14,7 @@
     - [Benefits](#benefits-1)
   - [Key Differences](#key-differences)
     - [Comparison Table: Virtualisation vs. Containerisation](#comparison-table-virtualisation-vs-containerisation)
+  - [When to choose?](#when-to-choose)
 - [Microservices](#microservices)
   - [What Are Microservices?](#what-are-microservices)
   - [How Are They Made Possible?](#how-are-they-made-possible)
@@ -84,6 +85,8 @@ Docker version 27.2.0, build 3ab4256
 
 # Differences between virtualisation and containerisation
 
+![vvsc](./dk-images/vvsc.png)
+
 ## Virtualisation vs. Containerisation
 Virtualisation and containerisation are both ways to create isolated environments for running applications, but they differ in their approach and structure.
 
@@ -129,6 +132,11 @@ Virtualisation and containerisation are both ways to create isolated environment
 | **Startup Time** | Slower                                   | Almost instant                         |
 | **Use Cases**    | Legacy applications, multiple OS types   | Microservices, cloud-native apps       |
 
+<br>
+
+## When to choose?
+
+![choices](./dk-images/choices.png)
 
 <br>
 
