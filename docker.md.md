@@ -42,6 +42,14 @@
   - [Step 4: Test the Image from Docker Hub](#step-4-test-the-image-from-docker-hub)
   - [Step 5: Test on the Browser](#step-5-test-on-the-browser)
 - [Automate docker image creation using a Dockerfile](#automate-docker-image-creation-using-a-dockerfile)
+  - [Step 1: Set Up the Folder Structure](#step-1-set-up-the-folder-structure)
+    - [Alternative: Using Visual Studio Code](#alternative-using-visual-studio-code)
+  - [Step 2: Write the Dockerfile](#step-2-write-the-dockerfile)
+  - [Step 3: Build the Custom Docker Image](#step-3-build-the-custom-docker-image)
+  - [Step 4: Run the Container](#step-4-run-the-container)
+  - [Step 5: Push the Image to Docker Hub](#step-5-push-the-image-to-docker-hub)
+  - [Step 6: Run Command](#step-6-run-command)
+  - [Check your browser!](#check-your-browser)
 
 
 # Install Docker Desktop on your local machine
@@ -311,7 +319,7 @@ Docker and microservices offer agility, consistency, and scalability, which is w
 
 # How Docker Works
 
-![alt text](image.png)
+![alt text](./dk-images/image.png)
 
 ## Docker Host
 * This is the machine where Docker is installed. 
@@ -358,24 +366,24 @@ Summary
 * What Docker images you already have: `docker images`
   * repository, tag, image id, created, size.
 
-![alt text](image-1.png)
+![alt text](./dk-images/image-1.png)
 
 * If you have a permission error, try:
   * Go to Windows search bar and type "Git Bash"
   * Click "Run as administrator".
 
-![alt text](image-2.png)
+![alt text](./dk-images/image-2.png)
 
 <br> 
 
 * Test: `docker run hello-world`
   * It created the container and is designed to stop running once it's done. 
 
-![alt text](image-3.png)
+![alt text](./dk-images/image-3.png)
 
 * If you go onto your Docker Desktop, you'll notice a container has been created.
 
-![alt text](image-4.png)
+![alt text](./dk-images/image-4.png)
 
 <br> 
 
@@ -383,7 +391,7 @@ Summary
   * `docker ps`
   * You'll notice nothing is running. 
 
-![alt text](image-1.png)
+![alt text](./dk-images/image-1.png)
 
 <br>
 
@@ -409,21 +417,21 @@ Why Specify Ports:
 Specify the Image:
 * `nginx`: The name of the Docker image you want to run. If the image is not available locally, Docker will pull it from Docker Hub.
 
-![alt text](image-5.png)
+![alt text](./dk-images/image-5.png)
 
 * You can check it's running on your Docker Desktop.
 
-![alt text](image-8.png)
+![alt text](./dk-images/image-8.png)
 
 <br>
 
 * `docker ps`
 
-![alt text](image-6.png)
+![alt text](./dk-images/image-6.png)
 
 * If you go to a web browser and type 'localhost' where you would your URL, you will see the nginx page.
 
-![alt text](image-7.png)
+![alt text](./dk-images/image-7.png)
 
 <br>
 
@@ -431,7 +439,7 @@ Specify the Image:
   * You can use the container ID or the Name. 
   * `docker stop d18152c4c45c` or `docker stop sleepy_wu`
 
-![alt text](image-9.png)
+![alt text](./dk-images/image-9.png)
 
 * `docker ps --help`
   * To get help on different types of docker ps commands.
@@ -439,7 +447,7 @@ Specify the Image:
 * To get a list of containers:
   * `docker ps -a`
 
-![alt text](image-10.png)
+![alt text](./dk-images/image-10.png)
 
 <br>
 
@@ -450,17 +458,17 @@ Specify the Image:
 * remove a container:
   * `docker rm sleepy_wu` (insert container name or id)
 
-![alt text](image-11.png)
+![alt text](./dk-images/image-11.png)
 
 * Error: you can either forcefully remove it or stop it running before you remove it. 
   * `docker rm --help`
 
-![alt text](image-12.png)
+![alt text](./dk-images/image-12.png)
 
 * `docker rm sleepy_wu -f`
 * `docker ps` to check if it's been removed.
 
-![alt text](image-13.png)
+![alt text](./dk-images/image-13.png)
 
 <br>
 
@@ -470,13 +478,13 @@ Specify the Image:
   * `docker run -d -p 80:80 nginx`
   * `docker ps`: to check it's running. 
 
-![alt text](image-14.png)
+![alt text](./dk-images/image-14.png)
 
   * Refresh web browser with local host running (to check nginx is running).
   * `docker exec -it determined_fermi sh` 
     * (-i (interpreter) t (terminal), container ID or name, sh (shell)). 
 
-![alt text](image-15.png)
+![alt text](./dk-images/image-15.png)
 
 *Note! This will give you the following error:
 `the input device is not a TTY.  If you are using mintty, try prefixing the command with 'winpty'`
@@ -490,30 +498,30 @@ command.*
       * e.g: `terraform` into the Bash terminal to check if it's present, type `alias tf="terraform"` to give it an alias, now when you give the command `tf`, terraform will appear on the terminal.
       * You will have to add this to .bashrc to make it persistent. 
 
-![alt text](image-16.png)
+![alt text](./dk-images/image-16.png)
 
 * Our fix: `alias docker="winpty docker"`
 * try your execute command again:
   * `docker exec -it determined_fermi sh` 
 * Once we're in the container, our prompt is now a '#'. 
 
-![alt text](image-17.png)
+![alt text](./dk-images/image-17.png)
 
 * Do a uname command:
   * `uname -a`
 
-![alt text](image-18.png)
+![alt text](./dk-images/image-18.png)
 
 * Do an update and upgrade within the container:
   * `apt-get update -y`
   * `apt-get upgrade -y`
 
-![alt text](image-19.png)
+![alt text](./dk-images/image-19.png)
 
 * Sudo does not exist within the container so we need to install it. 
   * `apt-get install sudo`
 
-![alt text](image-20.png)
+![alt text](./dk-images/image-20.png)
 
 <br> 
 
@@ -523,7 +531,7 @@ Change something inside the container.
   * `ls` to see what#s around.
   * cd into the user folder `cd /usr` > `cd share` > `ls` >` cd nginx` > `cd html` > `ls` > `pwd`   
 
-![alt text](image-21.png)
+![alt text](./dk-images/image-21.png)
 
 <br> 
 
@@ -531,14 +539,14 @@ Edit the index .html file
 * Install nano: `apt-get install nano`
 * `nano index.html`
 
-![alt text](image-22.png)
-![alt text](image-23.png)
+![alt text](./dk-images/image-22.png)
+![alt text](./dk-images/image-23.png)
 
 * Edit the line to something memorable!
 * Ctrl+S, Ctrl+X
 * Refresh your nginx browser.
 
-![alt text](image-24.png)
+![alt text](./dk-images/image-24.png)
 
 * `exit`: to leave the container. 
 
@@ -550,7 +558,7 @@ Run a container on a different port
 * Error: port is already being used as we have nginx running on port 80. 
   * Change to port 90: `docker run -d -p 90:80 ahskhan/nginx-254`
 
-![alt text](image-25.png)
+![alt text](./dk-images/image-25.png)
 
 <br>
 
@@ -576,13 +584,13 @@ This is the command you'll need: docker commit <container ID> <dockerhub usernam
 * We will be using the nginx page that we previously edited as our image. 
   * Container ID: 141aa3203d3b
 
-![alt text](image-26.png)
+![alt text](./dk-images/image-26.png)
 
 * Identify your dockerhub username.
   * Navigate to your Docker Desktop and locate your username.
     * `gina98`
 
-![alt text](image-30.png)
+![alt text](./dk-images/image-30.png)
 
 * Give the image a custome name that you will remember.
   * `nginx_custom_task`
@@ -594,7 +602,7 @@ Put the command together:
 * Log in to Docker Hub from your terminal if you haven't already
   * `docker login`
 
-![alt text](image-27.png)
+![alt text](./dk-images/image-27.png)
 
 ## Step 3: Push the Image to Docker Hub
 * Push the newly created image to Docker Hub.
@@ -614,11 +622,11 @@ This is what our command will be based off:
 * Go to your web browser and search: localhost:82
   * ':82': because this is the port we mapped to the container's port 80 when we ran the Docker container. 
 
-![alt text](image-28.png)
+![alt text](./dk-images/image-28.png)
 
 * `docker ps`
 
-![alt text](image-29.png)
+![alt text](./dk-images/image-29.png)
 
 <br>
  
@@ -643,3 +651,138 @@ You are also practicing using the docker build command
 If time:
 * Remove the local copy of your custom image
 * Re-run your container and force docker to pull the custom image from Docker Hub
+
+<br>
+
+## Step 1: Set Up the Folder Structure
+1. Create a new folder.
+   * Go to Git Bash terminal and choose a location for your dockerfile.
+     * I have placed it in my Documents folder to avoid it being pushed. 
+   * Name your folder: 'tech264-mod-nginx-dockerfile' and `cd` into it. 
+
+```bash
+mkdir tech264-mod-nginx-dockerfile
+cd tech264-mod-nginx-dockerfile
+```
+
+![alt text](./dk-images/image-31.png)
+
+<br> 
+
+2. Create a custom index.html file in this folder with your desired content.
+   * Create the file: `nano index.html`
+  
+![alt text](./dk-images/image-32.png)
+
+<br>
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gina's Mind Blown</title>
+</head>
+<body>
+    <p>Welcome to Gina's Custom Nginx Page!</p>
+</body>
+</html>
+```
+
+### Alternative: Using Visual Studio Code
+1. Open Visual Studio Code.
+   * Open your 'tech264-mod-nginx-dockerfile' folder on VSC.
+   * You will see a index.html file already located on the left. 
+
+![alt text](./dk-images/image-33.png)
+
+* Click into this file.
+* On the first line type: ! and click the Tab button.
+  * This automatically inserts the basic html code. 
+* Within the body you can enter your description.
+* The title will appear within the tab of the browser.
+
+![alt text](./dk-images/image-34.png)
+
+2. Check index.html file in Git Bash.
+   * Go to a Git Bash terminal and locate your 'tech264-mod-nginx-dockerfile' folder.
+   * Nano into the index.html file: `nano index.html`
+   * And there's your code!
+
+![alt text](./dk-images/image-35.png)
+
+<br> 
+
+## Step 2: Write the Dockerfile
+* Create a Dockerfile in the same folder with the following content:
+  * File name: Dockerfile
+
+![alt text](./dk-images/image-36.png)
+
+```dockerfile
+# Use the official Nginx base image
+FROM nginx:latest
+
+# Copy custom index.html to the default Nginx HTML location
+COPY index.html /usr/share/nginx/html/index.html
+```
+
+<br>
+
+## Step 3: Build the Custom Docker Image
+* Still within the tech264-mod-nginx-dockerfile folder.
+* Build the image and tag it. 
+  * Base it off of this command: docker build -t your_dockerhub_username/tech2xx-nginx-auto:v1 .
+  * `.`: means to use this directory and files. 
+
+```bash
+docker build -t gina98/tech264-nginx-auto:v1 .
+```
+
+![alt text](./dk-images/image-37.png)
+
+## Step 4: Run the Container
+* This will be within the home directory of your Git Bash.
+* Run the container to verify everything is working.
+  * We will be using port 83:80 because we have port :82 occupied currently. 
+  * Base it off of this command: docker run -d -p 80:80 your_dockerhub_username/tech2xx-nginx-auto:v1
+
+```bash
+docker run -d -p 83:80 gina98/tech264-nginx-auto:v1
+```
+
+![alt text](./dk-images/image-38.png)
+
+> If it's not working, you may need to open a fresh terminal. 
+
+<br> 
+
+## Step 5: Push the Image to Docker Hub
+* Log in to Docker Hub if needed, then push the image.
+  * To log in: `docker login`
+  * To push the image: docker push your_dockerhub_username/tech2xx-nginx-auto:v1
+
+```bash
+docker push gina98/tech264-nginx-auto:v1
+```
+
+![alt text](./dk-images/image-39.png)
+
+<br>
+
+## Step 6: Run Command 
+* Share the command so others can pull and run your custom Nginx image.
+  * The command is based on: docker run -d -p 80:80 your_dockerhub_username/tech2xx-nginx-auto:v1
+
+```bash
+docker run -d -p 84:80 gina98/tech264-nginx-auto:v1
+```
+
+## Check your browser!
+* Go to your web browser and type: localhost:84
+
+![alt text](./dk-images/image-40.png)
+
+<br>
+
