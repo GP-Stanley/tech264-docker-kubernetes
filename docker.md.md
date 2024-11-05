@@ -12,6 +12,10 @@
     - [Benefits](#benefits-1)
   - [Key Differences](#key-differences)
     - [Comparison Table: Virtualisation vs. Containerisation](#comparison-table-virtualisation-vs-containerisation)
+- [History of Running Software: Traditional, Virtualisation, and Containerisation](#history-of-running-software-traditional-virtualisation-and-containerisation)
+  - [Traditional Deployment](#traditional-deployment)
+  - [Virtualisation](#virtualisation-1)
+  - [Containerisation](#containerisation-1)
   - [When to choose?](#when-to-choose)
 - [Microservices](#microservices)
   - [What Are Microservices?](#what-are-microservices)
@@ -146,6 +150,69 @@ Source: https://www.researchgate.net/figure/Generic-Virtualization-Architecture-
 
 <br>
 
+# History of Running Software: Traditional, Virtualisation, and Containerisation
+
+![trad,virt,cont](./dk-images/trad,virt,cont.png)
+
+Source: https://www.linkedin.com/pulse/traditional-deployment-vs-virtualization-container-chinnayya-chintha-vmk2c/
+
+<br>
+
+## Traditional Deployment
+* Early on, organisations ran applications on physical servers.
+* Install or use an existing operating system.
+* Install the tools & dependencies needed by your software.
+* Run your application on it.
+
+Cons of Traditional Deployment:
+* In the issue of resource isolation, there is no way to define resource boundaries for applications in a physical server.
+* Scaling issues for specific applications and long downtime.
+* Over-utilisation of resources for a specific app can crash the entire physical server.
+* It was expensive for organisations to maintain many physical servers.
+
+To overcome this problem, a virtual machine was introduced.
+
+<br>
+
+## Virtualisation
+* Virtualisation is a process where software is used to create an abstract layer. So VM's that abstract layer or software is called Hypervisor.
+* Hypervisor simplify something—something that helps a virtual machine emulate a physical computer.
+* Hypervisor is software responsible for creating, managing and running these virtual machines. It also manages the allocation of resources between VM's on that single physical host.
+* Now each VM runs its own operating system and has its own virtual hardware, like virtual CPU, storage, etc.
+
+Cons of Virtualisation:
+* Operating system images are heavyweight; image size is in GB. 
+Contain guest OS for each virtual machine. 
+It is a slow-to-boot-up process.
+
+Real-time use cases of Virtualisation:
+* Diverse Operating System(o/s)
+* Legacy & Isolation Applications
+
+<br>
+
+## Containerisation
+* Docker is an **open source** platform that enables developers to build, deploy, run, update and manage containers—standardised, executable components that combine application source code with the operating system (OS) libraries and dependencies required to run that code in any environment.
+* Docker container virtualise the operating system. 
+  * So each individual container contains only the application and it's libraries and dependencies.
+* Docker Engine is core software that's responsible for managing the life cycle of docker container and providing infrastructure for creating, runningand orchestrating containers.
+* In Docker Engine, Cgroups or Control groups, is responsible for **allocating resources among the processes**, and Namespaces (n/s)  restrict container access and visibility to other resources on the system.
+* Docker Images are light weight, standalone and executable packages that include everything you need to run a piece of software.
+* Docker Images are built using Dockerfile, which are simple document that provide instructions to creating the image.
+* Docker containers are runtime instances of images that run in docker engine. Each container is an isolated and self-sufficient environment that includes only the necessary components of running specific application and can be easily started, stopped and restarted.
+
+Real-time use cases of Containerisation:
+* Ideal for portability, scalability, and microservice architectures.
+* Containers package applications with dependencies into a single unit.
+* Rapid development, deployment & Resource Efficiency
+
+When to Choose
+* **Traditional Deployment**: Fine-grained control, customisation.
+* **Virtualisation**: workload consolidation, resource optimisation.
+* **Containerisation**: portability, scalability, lightweight deployment.
+
+<br>
+
 ## When to choose?
 
 ![choices](./dk-images/choices.png)
@@ -171,6 +238,9 @@ Source: https://blog.bytebytego.com/p/virtualization-and-containerization
 * **Scalability**: You can scale individual services based on demand, without affecting other parts of the application.
 * **Flexibility**: Different microservices can be written in different languages or use different frameworks.
 * **Resilience**: If one microservice fails, it doesn’t bring down the entire application.
+
+![microservices](./dk-images/microservices.png)
+![micro,eg](./dk-images/micro,eg.png)
 
 <br>
 
