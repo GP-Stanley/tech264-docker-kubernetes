@@ -34,7 +34,13 @@
   - [Running Containers](#running-containers)
   - [Pulling Images Manually](#pulling-images-manually)
 - [Tuesday Code-Along, 05/11](#tuesday-code-along-0511)
-- [Change a container from the inside](#change-a-container-from-the-inside)
+  - [docker run](#docker-run)
+    - [Why Specify Ports](#why-specify-ports)
+  - [How to stop this container.](#how-to-stop-this-container)
+  - [Start and remove a container](#start-and-remove-a-container)
+  - [Change a container from the inside](#change-a-container-from-the-inside)
+  - [Change something inside the container](#change-something-inside-the-container)
+  - [Run a container on a different port](#run-a-container-on-a-different-port)
 - [Push host-custom-static-webpage container image to Docker Hub](#push-host-custom-static-webpage-container-image-to-docker-hub)
   - [Step 1: Commit the Running Container as an Image](#step-1-commit-the-running-container-as-an-image)
   - [Step 2: Log in to Docker Hub](#step-2-log-in-to-docker-hub)
@@ -395,21 +401,23 @@ Summary
 
 <br>
 
+## docker run
 `docker run -d -p 80:80 nginx`
 * `-d`: Detached mode. This option runs the container in the background.
 * `-p`: Port mapping. This option specifies the ports to be used for this container, both inside and outside.
 * `80:80`: Maps port 80 on the host to port 80 on the container. This is useful if you want to expose the container's service on a specific port.
 * `Nginx`: The container image you want to run. In this case, it's the Nginx web server.
 
-Detailed Explanation
-Detached Mode (-d):
+Explanation: 
+
+Detached Mode (`-d`):
 * Runs the container in the background, allowing you to continue using the terminal for other commands.
 
-Port Mapping (-p):
-* 80:80: The first 80 is the host port, and the second 80 is the container port. 
+Port Mapping (`-p`):
+* `80:80`: The first 80 is the host port, and the second 80 is the container port. 
 * This means that any traffic to port 80 on the host will be forwarded to port 80 on the container.
 
-Why Specify Ports: 
+### Why Specify Ports
 * Containers are often designed to run specific services or applications. 
 * By mapping ports, you can control how these services are accessed from outside the container. 
 * This is particularly useful if you want to run multiple servers on different ports.
@@ -435,7 +443,7 @@ Specify the Image:
 
 <br>
 
-* How to stop this container. 
+## How to stop this container. 
   * You can use the container ID or the Name. 
   * `docker stop d18152c4c45c` or `docker stop sleepy_wu`
 
@@ -451,7 +459,7 @@ Specify the Image:
 
 <br>
 
-* Start and remove a container
+## Start and remove a container
   * `docker start sleepy_wu` (insert container name or id)
 
 * Removing the image is different to removing the image.
@@ -472,7 +480,7 @@ Specify the Image:
 
 <br>
 
-# Change a container from the inside
+## Change a container from the inside
 
 * Run the container again (becuase we've deleted it). 
   * `docker run -d -p 80:80 nginx`
@@ -525,7 +533,7 @@ command.*
 
 <br> 
 
-Change something inside the container.
+## Change something inside the container
 * We want to change the default nginx page. 
   * `pwd`: to find out where you are.
   * `ls` to see what#s around.
@@ -552,7 +560,7 @@ Edit the index .html file
 
 <br> 
 
-Run a container on a different port
+## Run a container on a different port
 * `docker run -d -p 80:80 ahskhan/nginx-254`
 
 * Error: port is already being used as we have nginx running on port 80. 
