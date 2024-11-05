@@ -21,7 +21,7 @@
   - [What Are Microservices?](#what-are-microservices)
   - [How Are They Made Possible?](#how-are-they-made-possible)
     - [Benefits of Microservices](#benefits-of-microservices)
-- [Docker](#docker)
+- [🐳Docker](#docker)
   - [What Is Docker?](#what-is-docker)
   - [Alternatives to Docker](#alternatives-to-docker)
     - [How Docker Works (Docker Architecture/API)](#how-docker-works-docker-architectureapi)
@@ -33,6 +33,7 @@
   - [Docker Hub (Registry)](#docker-hub-registry)
   - [Running Containers](#running-containers)
   - [Pulling Images Manually](#pulling-images-manually)
+    - [Summary](#summary)
 - [Tuesday Code-Along, 05/11](#tuesday-code-along-0511)
   - [docker run](#docker-run)
     - [Why Specify Ports](#why-specify-ports)
@@ -40,6 +41,7 @@
   - [Start and remove a container](#start-and-remove-a-container)
   - [Change a container from the inside](#change-a-container-from-the-inside)
   - [Change something inside the container](#change-something-inside-the-container)
+    - [Edit the index .html file](#edit-the-index-html-file)
   - [Run a container on a different port](#run-a-container-on-a-different-port)
 - [Push host-custom-static-webpage container image to Docker Hub](#push-host-custom-static-webpage-container-image-to-docker-hub)
   - [Step 1: Commit the Running Container as an Image](#step-1-commit-the-running-container-as-an-image)
@@ -273,7 +275,7 @@ Source: https://blog.bytebytego.com/p/virtualization-and-containerization
 
 <br>
 
-# Docker
+# 🐳Docker
 * Docker is a popular platform for developing, shipping, and running applications in containers. 
 * It automates the deployment of applications by packaging them with everything they need to run.
 
@@ -303,7 +305,7 @@ Docker’s architecture consists of several key components:
 <br>
 
 ## Success Story Using Docker
-Example: Spotify
+Example: Spotify🎶 
 
 * **Challenge**: Spotify needed to scale its application to millions of users across many devices while maintaining high reliability and quick feature delivery.
 * **Solution with Docker**: Spotify adopted Docker for its microservices architecture, using it to package each service independently. 
@@ -356,7 +358,7 @@ Docker and microservices offer agility, consistency, and scalability, which is w
 * This command is used to manually download an image from a remote repository (e.g., Docker Hub) to the local machine. 
 * This is useful if you want to ensure that the image is available locally before running a container.
 
-Summary
+### Summary
 * Docker simplifies the process of building, deploying, and running applications by using containers. 
 * The Docker Host runs the Docker Daemon, which manages containers and images. 
 * The Docker CLI allows users to interact with the Docker Daemon using commands. 
@@ -369,8 +371,9 @@ Summary
 # Tuesday Code-Along, 05/11
 * Open Git Bash window. 
 * `docker --help`: to help you with Docker commands.
-* What Docker images you already have: `docker images`
-  * repository, tag, image id, created, size.
+* Check what Docker images you already have: `docker images`
+  * The output is the headings of the columns. 
+    * repository, tag, image id, created, size.
 
 ![alt text](./dk-images/image-1.png)
 
@@ -423,7 +426,8 @@ Port Mapping (`-p`):
 * This is particularly useful if you want to run multiple servers on different ports.
 
 Specify the Image:
-* `nginx`: The name of the Docker image you want to run. If the image is not available locally, Docker will pull it from Docker Hub.
+* `nginx`: The name of the Docker image you want to run. 
+* If the image is not available locally, Docker will pull it from Docker Hub.
 
 ![alt text](./dk-images/image-5.png)
 
@@ -433,7 +437,7 @@ Specify the Image:
 
 <br>
 
-* `docker ps`
+* Check it's running with: `docker ps`
 
 ![alt text](./dk-images/image-6.png)
 
@@ -462,8 +466,10 @@ Specify the Image:
 ## Start and remove a container
   * `docker start sleepy_wu` (insert container name or id)
 
-* Removing the image is different to removing the image.
-* remove a container:
+* Removing the container is different to removing the image.
+* When you remove a container, you are deleting the container instance, but the image it was created from remains intact.
+
+* Remove a container:
   * `docker rm sleepy_wu` (insert container name or id)
 
 ![alt text](./dk-images/image-11.png)
@@ -490,15 +496,18 @@ Specify the Image:
 
   * Refresh web browser with local host running (to check nginx is running).
   * `docker exec -it determined_fermi sh` 
-    * (-i (interpreter) t (terminal), container ID or name, sh (shell)). 
+    * -i: Interactive mode.
+    * t: Allocate a terminal.
+      * A pseudo-TTY (pseudo-terminal) is a software interface that emulates a physical terminal. 
+      * It allows programs to interact with the terminal as if they were connected to a real terminal device. 
+      * In the context of Docker, a pseudo-TTY is used to provide an interactive shell session within a container.
+    * name of the container.
+    * sh: Shell to be used inside the container.
 
 ![alt text](./dk-images/image-15.png)
 
 *Note! This will give you the following error:
-`the input device is not a TTY.  If you are using mintty, try prefixing the command with 'winpty'`
-. Fear not! This is normal. To fix this, we can use the
-`alias`
-command.*
+`the input device is not a TTY.  If you are using mintty, try prefixing the command with 'winpty'`. Fear not! This is normal. To fix this, we can use the `alias` command.*
 
 * Error: we need to prefix the command to fix this. 
   * Fix: run an alias command. 
@@ -543,11 +552,12 @@ command.*
 
 <br> 
 
-Edit the index .html file
+### Edit the index .html file
 * Install nano: `apt-get install nano`
 * `nano index.html`
 
 ![alt text](./dk-images/image-22.png)
+
 ![alt text](./dk-images/image-23.png)
 
 * Edit the line to something memorable!
@@ -584,7 +594,7 @@ Task:
 
 ## Step 1: Commit the Running Container as an Image
 
-This is the command you'll need: docker commit <container ID> <dockerhub username>/<image-name>
+This is the command you'll need: `docker commit <container ID> <dockerhub username>/<image-name>`
 
 * Identify the running container ID for the Nginx container:
   * `docker ps`
@@ -607,7 +617,7 @@ Put the command together:
 `docker commit 141aa3203d3b gina98/nginx_custom_task`
 
 ## Step 2: Log in to Docker Hub
-* Log in to Docker Hub from your terminal if you haven't already
+* Log in to Docker Hub from your terminal if you haven't already.
   * `docker login`
 
 ![alt text](./dk-images/image-27.png)
@@ -632,7 +642,7 @@ This is what our command will be based off:
 
 ![alt text](./dk-images/image-28.png)
 
-* `docker ps`
+* Check if it's running: `docker ps`
 
 ![alt text](./dk-images/image-29.png)
 
