@@ -105,7 +105,7 @@ Source: https://www.researchgate.net/figure/Generic-Virtualization-Architecture-
 ### Benefits
 * **Isolation**: VMs are fully isolated, which increases security and reliability.
 * **Resource Allocation**: You can allocate specific CPU, memory, and storage resources to each VM.
-* **Compatibility**: Each VM can run different OSes, making it flexible for various applications.
+* **Compatibility**: Each VM can run different OS's, making it flexible for various applications.
 
 <br>
 
@@ -158,11 +158,13 @@ Source: https://blog.bytebytego.com/p/virtualization-and-containerization
 * Microservices are an architectural style where applications are broken down into small, independent services that each handle a specific function.
 
 ## What Are Microservices?
+* Microservices are an architectural style where applications are broken down into small, independent services that each handle a specific function.
 * Microservices are small, self-contained services that communicate with each other through APIs.
 * Each microservice is responsible for a specific function, like user authentication, payment processing, or inventory management.
 
 ## How Are They Made Possible?
 * Microservices are enabled by containerisation tools like Docker, which allow each service to be isolated and packaged separately.
+* Docker containers encapsulate the application code, libraries, and dependencies, ensuring that each microservice runs consistently across different environments. 
 * Communication between microservices is typically handled by APIs, making it easier to scale and update parts of an application without affecting others.
 
 ### Benefits of Microservices
@@ -196,6 +198,10 @@ Docker’s architecture consists of several key components:
   * Each image is built from a Dockerfile, which specifies the OS, dependencies, and application.
 * **Docker Containers**: Instances of Docker images that can be run, stopped, and removed as needed.
 * **Docker Hub**: A public repository for sharing and downloading container images.
+
+![daemon](./dk-images/daemon.png)
+
+<br>
 
 ## Success Story Using Docker
 Example: Spotify
