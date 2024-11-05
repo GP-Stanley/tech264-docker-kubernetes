@@ -27,6 +27,21 @@
     - [How Docker Works (Docker Architecture/API)](#how-docker-works-docker-architectureapi)
   - [Success Story Using Docker](#success-story-using-docker)
     - [Concepts](#concepts)
+- [How Docker Works](#how-docker-works)
+  - [Docker Host](#docker-host)
+  - [Docker CLI (Client)](#docker-cli-client)
+  - [Docker Hub (Registry)](#docker-hub-registry)
+  - [Running Containers](#running-containers)
+  - [Pulling Images Manually](#pulling-images-manually)
+- [Tuesday Code-Along, 05/11](#tuesday-code-along-0511)
+- [Change a container from the inside](#change-a-container-from-the-inside)
+- [Push host-custom-static-webpage container image to Docker Hub](#push-host-custom-static-webpage-container-image-to-docker-hub)
+  - [Step 1: Commit the Running Container as an Image](#step-1-commit-the-running-container-as-an-image)
+  - [Step 2: Log in to Docker Hub](#step-2-log-in-to-docker-hub)
+  - [Step 3: Push the Image to Docker Hub](#step-3-push-the-image-to-docker-hub)
+  - [Step 4: Test the Image from Docker Hub](#step-4-test-the-image-from-docker-hub)
+  - [Step 5: Test on the Browser](#step-5-test-on-the-browser)
+- [Automate docker image creation using a Dockerfile](#automate-docker-image-creation-using-a-dockerfile)
 
 
 # Install Docker Desktop on your local machine
@@ -293,3 +308,338 @@ Example: Spotify
 Docker and microservices offer agility, consistency, and scalability, which is why they are widely used in modern software development.
 
 <br>
+
+# How Docker Works
+
+![alt text](image.png)
+
+## Docker Host
+* This is the machine where Docker is installed. 
+* It runs the Docker Daemon (server), which is responsible for managing Docker containers, images, networks, and storage volumes. 
+* The Docker Daemon listens for Docker API requests and manages Docker objects.
+
+## Docker CLI (Client)
+* *The Docker Command Line Interface (CLI) is a tool that allows users to interact with the Docker Daemon using commands. 
+* These commands use an API to communicate with the Docker Daemon, enabling users to manage containers, images, networks, and volumes.
+
+## Docker Hub (Registry)
+* Docker Hub is a cloud-based registry service where Docker images are stored. 
+* It acts as a central repository for Docker images, allowing users to share and access container images. 
+* Docker Hub stores all the files needed to run a container, such as the application code, libraries, and dependencies.
+
+## Running Containers
+`docker run (image name)`
+* This command is used to create and start a container from a specified image. 
+* When you run this command, Docker checks if the image is available locally. 
+* If the image is not found locally, Docker will pull it from Docker Hub.
+
+  * **Image Check**: If the specified image is not available locally, Docker Daemon will check Docker Hub to see if the image exists.
+  * **Image Pull**: If the image is found on Docker Hub, Docker will download (pull) the image to the local machine.
+  * **Container Start**: Once the image is available locally, Docker will create and start a container from the image.
+
+## Pulling Images Manually
+`docker pull (image name)`
+* This command is used to manually download an image from a remote repository (e.g., Docker Hub) to the local machine. 
+* This is useful if you want to ensure that the image is available locally before running a container.
+
+Summary
+* Docker simplifies the process of building, deploying, and running applications by using containers. 
+* The Docker Host runs the Docker Daemon, which manages containers and images. 
+* The Docker CLI allows users to interact with the Docker Daemon using commands. 
+* Docker Hub serves as a central repository for Docker images. 
+* When running a container, Docker checks if the image is available locally and pulls it from Docker Hub if necessary. 
+* This streamlined process ensures that applications run consistently across different environments.
+
+<br>
+
+# Tuesday Code-Along, 05/11
+* Open Git Bash window. 
+* `docker --help`: to help you with Docker commands.
+* What Docker images you already have: `docker images`
+  * repository, tag, image id, created, size.
+
+![alt text](image-1.png)
+
+* If you have a permission error, try:
+  * Go to Windows search bar and type "Git Bash"
+  * Click "Run as administrator".
+
+![alt text](image-2.png)
+
+<br> 
+
+* Test: `docker run hello-world`
+  * It created the container and is designed to stop running once it's done. 
+
+![alt text](image-3.png)
+
+* If you go onto your Docker Desktop, you'll notice a container has been created.
+
+![alt text](image-4.png)
+
+<br> 
+
+* Check if any containers are running.
+  * `docker ps`
+  * You'll notice nothing is running. 
+
+![alt text](image-1.png)
+
+<br>
+
+`docker run -d -p 80:80 nginx`
+* `-d`: Detached mode. This option runs the container in the background.
+* `-p`: Port mapping. This option specifies the ports to be used for this container, both inside and outside.
+* `80:80`: Maps port 80 on the host to port 80 on the container. This is useful if you want to expose the container's service on a specific port.
+* `Nginx`: The container image you want to run. In this case, it's the Nginx web server.
+
+Detailed Explanation
+Detached Mode (-d):
+* Runs the container in the background, allowing you to continue using the terminal for other commands.
+
+Port Mapping (-p):
+* 80:80: The first 80 is the host port, and the second 80 is the container port. 
+* This means that any traffic to port 80 on the host will be forwarded to port 80 on the container.
+
+Why Specify Ports: 
+* Containers are often designed to run specific services or applications. 
+* By mapping ports, you can control how these services are accessed from outside the container. 
+* This is particularly useful if you want to run multiple servers on different ports.
+
+Specify the Image:
+* `nginx`: The name of the Docker image you want to run. If the image is not available locally, Docker will pull it from Docker Hub.
+
+![alt text](image-5.png)
+
+* You can check it's running on your Docker Desktop.
+
+![alt text](image-8.png)
+
+<br>
+
+* `docker ps`
+
+![alt text](image-6.png)
+
+* If you go to a web browser and type 'localhost' where you would your URL, you will see the nginx page.
+
+![alt text](image-7.png)
+
+<br>
+
+* How to stop this container. 
+  * You can use the container ID or the Name. 
+  * `docker stop d18152c4c45c` or `docker stop sleepy_wu`
+
+![alt text](image-9.png)
+
+* `docker ps --help`
+  * To get help on different types of docker ps commands.
+
+* To get a list of containers:
+  * `docker ps -a`
+
+![alt text](image-10.png)
+
+<br>
+
+* Start and remove a container
+  * `docker start sleepy_wu` (insert container name or id)
+
+* Removing the image is different to removing the image.
+* remove a container:
+  * `docker rm sleepy_wu` (insert container name or id)
+
+![alt text](image-11.png)
+
+* Error: you can either forcefully remove it or stop it running before you remove it. 
+  * `docker rm --help`
+
+![alt text](image-12.png)
+
+* `docker rm sleepy_wu -f`
+* `docker ps` to check if it's been removed.
+
+![alt text](image-13.png)
+
+<br>
+
+# Change a container from the inside
+
+* Run the container again (becuase we've deleted it). 
+  * `docker run -d -p 80:80 nginx`
+  * `docker ps`: to check it's running. 
+
+![alt text](image-14.png)
+
+  * Refresh web browser with local host running (to check nginx is running).
+  * `docker exec -it determined_fermi sh` 
+    * (-i (interpreter) t (terminal), container ID or name, sh (shell)). 
+
+![alt text](image-15.png)
+
+*Note! This will give you the following error:
+`the input device is not a TTY.  If you are using mintty, try prefixing the command with 'winpty'`
+. Fear not! This is normal. To fix this, we can use the
+`alias`
+command.*
+
+* Error: we need to prefix the command to fix this. 
+  * Fix: run an alias command. 
+    * This is a way of saying "when I type this into the terminal, I want you to do this instead". 
+      * e.g: `terraform` into the Bash terminal to check if it's present, type `alias tf="terraform"` to give it an alias, now when you give the command `tf`, terraform will appear on the terminal.
+      * You will have to add this to .bashrc to make it persistent. 
+
+![alt text](image-16.png)
+
+* Our fix: `alias docker="winpty docker"`
+* try your execute command again:
+  * `docker exec -it determined_fermi sh` 
+* Once we're in the container, our prompt is now a '#'. 
+
+![alt text](image-17.png)
+
+* Do a uname command:
+  * `uname -a`
+
+![alt text](image-18.png)
+
+* Do an update and upgrade within the container:
+  * `apt-get update -y`
+  * `apt-get upgrade -y`
+
+![alt text](image-19.png)
+
+* Sudo does not exist within the container so we need to install it. 
+  * `apt-get install sudo`
+
+![alt text](image-20.png)
+
+<br> 
+
+Change something inside the container.
+* We want to change the default nginx page. 
+  * `pwd`: to find out where you are.
+  * `ls` to see what#s around.
+  * cd into the user folder `cd /usr` > `cd share` > `ls` >` cd nginx` > `cd html` > `ls` > `pwd`   
+
+![alt text](image-21.png)
+
+<br> 
+
+Edit the index .html file
+* Install nano: `apt-get install nano`
+* `nano index.html`
+
+![alt text](image-22.png)
+![alt text](image-23.png)
+
+* Edit the line to something memorable!
+* Ctrl+S, Ctrl+X
+* Refresh your nginx browser.
+
+![alt text](image-24.png)
+
+* `exit`: to leave the container. 
+
+<br> 
+
+Run a container on a different port
+* `docker run -d -p 80:80 ahskhan/nginx-254`
+
+* Error: port is already being used as we have nginx running on port 80. 
+  * Change to port 90: `docker run -d -p 90:80 ahskhan/nginx-254`
+
+![alt text](image-25.png)
+
+<br>
+
+# Push host-custom-static-webpage container image to Docker Hub
+Task:
+* Create an image from your running container which is running nginx with the index.html file we already modified in our code-along.
+* Push the image to your Docker Hub account.
+* Once you know your image runs from pulling down from Docker Hub, then delete your local image, then re-run your docker run command.
+* Share the link to run your pushed container in the chat e.g. docker run -d -p 90:80 ahskhan/nginx-254
+* It should work for everyone.
+
+*Hint: Most blockers are related to repo naming convention.*
+
+<br>
+
+## Step 1: Commit the Running Container as an Image
+
+This is the command you'll need: docker commit <container ID> <dockerhub username>/<image-name>
+
+* Identify the running container ID for the Nginx container:
+  * `docker ps`
+
+* We will be using the nginx page that we previously edited as our image. 
+  * Container ID: 141aa3203d3b
+
+![alt text](image-26.png)
+
+* Identify your dockerhub username.
+  * Navigate to your Docker Desktop and locate your username.
+    * `gina98`
+
+![alt text](image-30.png)
+
+* Give the image a custome name that you will remember.
+  * `nginx_custom_task`
+
+Put the command together: 
+`docker commit 141aa3203d3b gina98/nginx_custom_task`
+
+## Step 2: Log in to Docker Hub
+* Log in to Docker Hub from your terminal if you haven't already
+  * `docker login`
+
+![alt text](image-27.png)
+
+## Step 3: Push the Image to Docker Hub
+* Push the newly created image to Docker Hub.
+
+This is what our command will be based off: 
+> `docker push <dockerhub username>/<image-name>`
+
+* Outcome: `docker push gina98/nginx_custom_task`
+
+## Step 4: Test the Image from Docker Hub
+This is what our command will be based off: 
+> `docker run -d -p <hostport:80> <dockerhub username>/<image-name>`
+
+* Outcome: `docker run -d -p 82:80 gina98/nginx_custom_task`
+ 
+## Step 5: Test on the Browser
+* Go to your web browser and search: localhost:82
+  * ':82': because this is the port we mapped to the container's port 80 when we ran the Docker container. 
+
+![alt text](image-28.png)
+
+* `docker ps`
+
+![alt text](image-29.png)
+
+<br>
+ 
+# Automate docker image creation using a Dockerfile
+Task:
+
+We don't want to do the steps manually to change the default nginx page. We want to automate it.
+
+You are also practicing using the docker build command
+* Create a new folder such as tech2xx-mod-nginx-dockerfile (not in a repo that will be published)
+* cd into the new folder
+* Create an index.html you'd like to use instead of the nginx default page
+* Create a Dockerfile to:
+* Use the nginx base image
+* Copy your index.html to the location of the nginx default page in the container
+* Use docker build command to build your custom image
+* Tag it similar to tech2xx-nginx-auto:v1
+* Run the container
+* Push your custom image to Docker Hub
+* Share your command to run your custom image in the chat
+
+If time:
+* Remove the local copy of your custom image
+* Re-run your container and force docker to pull the custom image from Docker Hub
