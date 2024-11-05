@@ -1,6 +1,4 @@
-# tech264-docker-kubernetes
 
-- [tech264-docker-kubernetes](#tech264-docker-kubernetes)
 - [Install Docker Desktop on your local machine](#install-docker-desktop-on-your-local-machine)
   - [Installing Docker Desktop](#installing-docker-desktop)
   - [Verify Docker Installation](#verify-docker-installation)
@@ -28,7 +26,6 @@
 
 
 # Install Docker Desktop on your local machine
-Install Docker Desktop
 
 Once installed:
 * In a terminal window, run docker --version, and paste the output in the chat. From v20 onwards is fine.
@@ -86,6 +83,9 @@ Docker version 27.2.0, build 3ab4256
 # Differences between virtualisation and containerisation
 
 ![vvsc](./dk-images/vvsc.png)
+Source: https://www.bmc.com/blogs/containers-vs-virtual-machines/
+
+<br>
 
 ## Virtualisation vs. Containerisation
 Virtualisation and containerisation are both ways to create isolated environments for running applications, but they differ in their approach and structure.
@@ -98,10 +98,16 @@ Virtualisation and containerisation are both ways to create isolated environment
 **What's in a VM?**
 * Each virtual machine includes a full OS, libraries, dependencies, and the application itself.
 
+![virt-arch](./dk-images/virt-arch.png)
+
+Source: https://www.researchgate.net/figure/Generic-Virtualization-Architecture-based-on-56_fig3_366198104
+
 ### Benefits
-**Isolation**: VMs are fully isolated, which increases security and reliability.
-**Resource Allocation**: You can allocate specific CPU, memory, and storage resources to each VM.
-**Compatibility**: Each VM can run different OSes, making it flexible for various applications.
+* **Isolation**: VMs are fully isolated, which increases security and reliability.
+* **Resource Allocation**: You can allocate specific CPU, memory, and storage resources to each VM.
+* **Compatibility**: Each VM can run different OSes, making it flexible for various applications.
+
+<br>
 
 ## Containerisation
 **How It Works**
@@ -110,6 +116,10 @@ Virtualisation and containerisation are both ways to create isolated environment
 
 **What's in a Container?**
 * A container usually includes only the application, necessary libraries, and dependencies—no separate OS.
+
+![cont-arch](./dk-images/cont-arch.png)
+
+<br>
 
 ### Benefits
 * **Lightweight**: Containers don’t need an entire OS, making them smaller and faster to start up.
@@ -132,11 +142,15 @@ Virtualisation and containerisation are both ways to create isolated environment
 | **Startup Time** | Slower                                   | Almost instant                         |
 | **Use Cases**    | Legacy applications, multiple OS types   | Microservices, cloud-native apps       |
 
+![both-arch](./dk-images/both-arch.png)
+
 <br>
 
 ## When to choose?
 
 ![choices](./dk-images/choices.png)
+
+Source: https://blog.bytebytego.com/p/virtualization-and-containerization
 
 <br>
 
