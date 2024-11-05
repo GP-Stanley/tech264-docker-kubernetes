@@ -60,7 +60,7 @@ Source: https://docs.docker.com/desktop/install/windows-install/
 Docker version 27.2.0, build 3ab4256
 ```
 
-* It will ask to restard your desktop.
+* It will ask to restart your desktop.
 
 ![alt text](./dk-images/restart.png)
 
