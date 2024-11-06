@@ -1222,12 +1222,6 @@ Purpose
 Summary
 * mongo-data is a named volume used to store MongoDB's database files (inside /data/db in the container) to ensure data is preserved across container restarts or removals.
 
-Optional:
-* Add a 'sleep' command within your command line to give the database time to be ready for seeding. 
-```bash
-command: sh -c "sleep 10 && node seeds/seed.js && npm start"
-```
-
 <br>
 
 ## Step 3: Run the Application with Docker Compose
