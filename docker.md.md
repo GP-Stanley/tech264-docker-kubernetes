@@ -76,8 +76,10 @@
 - [Use Docker Compose to Manage Multi-Container Docker Applications](#use-docker-compose-to-manage-multi-container-docker-applications)
   - [Step 1: Ensure Images Are Available](#step-1-ensure-images-are-available)
   - [Step 2: Create docker-compose.yml](#step-2-create-docker-composeyml)
+    - [Volumes](#volumes)
   - [Step 3: Run the Application with Docker Compose](#step-3-run-the-application-with-docker-compose)
   - [Step 4: Verify the Setup](#step-4-verify-the-setup)
+    - [Summary of How This Works Together](#summary-of-how-this-works-together)
   - [Step 5: Seeding the Database](#step-5-seeding-the-database)
     - [Manual Seeding](#manual-seeding)
     - [Automatic Seeding](#automatic-seeding)
@@ -1152,9 +1154,10 @@ Navigate to where you want to keep your file.
 nano docker-compose.yml
 ```
 
-Database half of the compose.yml file: 
+<br>
+
 ```yaml
-version: "3.8"
+version: "3.8"  # This will be obsolete, but I still kept it. 
 services:
   # MongoDB service
   mongo:
@@ -1178,12 +1181,52 @@ services:
       - DB_PORT=27017         # Optional: set MongoDB port if app needs it
     command: sh -c "node seeds/seed.js && npm start"
 #    command: npm start        # Start the app with npm start
+# 'command' override 'CMD' in the Dockerfile so be careful. 
 
 volumes:
   mongo-data:                 # Declare volume for MongoDB data persistence
 ```
 
 * Ctrl+S, Ctrl+X: to save and exit. 
+
+### Volumes
+* the volumes section is used for data persistence and defining named volumes that can be shared or retained between container restarts. 
+
+1. MongoDB Service (mongo):
+   * The volumes configuration here specifies that the named volume mongo-data should be mounted to /data/db inside the MongoDB container.
+   * This means that MongoDB's data will be stored in the mongo-data volume, which persists beyond container restarts or removals. This is crucial to ensure that the MongoDB data (e.g., collections, documents) is not lost when the container is stopped, removed, or recreated.
+
+```yaml
+volumes:
+  - mongo-data:/data/db
+```
+
+Purpose
+* Persistence of MongoDB data
+  * Without this volume, if the MongoDB container is stopped or removed, all data inside the container would be lost. 
+  * The mongo-data volume ensures that MongoDB's data is saved outside the container's filesystem and can be accessed by the container even after restarts.
+
+2. Named Volumes:
+  * At the bottom of the file, the volumes section defines mongo-data as a named volume that Docker will manage.
+
+```yaml
+volumes:
+  mongo-data:
+```
+
+Purpose
+* This volume is automatically created by Docker when you run docker-compose up for the first time. 
+* It's used to persist the MongoDB data outside the container's ephemeral filesystem.
+* If the volume doesn't exist yet, Docker will create it. If it already exists, Docker will reuse it, ensuring data consistency across container lifecycle events.
+
+Summary
+* mongo-data is a named volume used to store MongoDB's database files (inside /data/db in the container) to ensure data is preserved across container restarts or removals.
+
+Optional:
+* Add a 'sleep' command within your command line to give the database time to be ready for seeding. 
+```bash
+command: sh -c "sleep 10 && node seeds/seed.js && npm start"
+```
 
 <br>
 
@@ -1210,6 +1253,15 @@ docker-compose up -d
 ![alt text](./dk-images/posts-app.png)
 
 * We now need to seed the database.
+
+<br>
+
+### Summary of How This Works Together
+* The MongoDB service (mongo) provides a database for the application, with a persistent volume for data storage.
+* The Node.js app service (app) runs your application, with DB_HOST=mongo allowing it to find and connect to MongoDB.
+* When you run docker-compose up, Docker Compose will:
+  1. Start mongo.
+  2. Start app, once MongoDB is ready, ensuring the app can connect to the database without issues.
 
 <br>
 
@@ -1245,7 +1297,7 @@ winpty docker exec -it bb813a212a08 node seeds/seed.js
 ### Automatic Seeding
 To seed the database automatically, you can use one of the following methods:
 
-1. Modify the App Service Command
+1. Modify the App Service Command.
    * Add a line to your Docker Compose file to run the seed script automatically when the app container starts. 
    * Update the command in the app service to run the seed script.
    * This will run the seed script before starting the app.
@@ -1270,7 +1322,7 @@ docker-compose up -d
 
 <br>
 
-2. Use MongoDB Initialisation Scripts: 
+2. Use MongoDB Initialisation Scripts (UNTESTED)
    * MongoDB allows running initialisation scripts if you place them in the /docker-entrypoint-initdb.d folder in the MongoDB container. 
    * Create a .js script with MongoDB seed commands and bind it to this directory in the mongo service.
    * Replace ./mongo-seed.js with the path to your seed script. MongoDB will run this script on first startup.
