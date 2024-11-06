@@ -65,7 +65,14 @@
   - [Step 3: Run the Docker Container](#step-3-run-the-docker-container)
   - [Step 4: Push the Image to Docker Hub](#step-4-push-the-image-to-docker-hub)
   - [Step 5: Check your browser!](#step-5-check-your-browser)
-- [Use Docker Compose to run app and database containers](#use-docker-compose-to-run-app-and-database-containers)
+- [Research Docker Compose](#research-docker-compose)
+  - [What is Docker Compose?](#what-is-docker-compose)
+  - [Why Use Docker Compose?](#why-use-docker-compose)
+  - [How to Use Docker Compose](#how-to-use-docker-compose)
+  - [What Do You Need to Install for Docker Compose to Work?](#what-do-you-need-to-install-for-docker-compose-to-work)
+  - [Where to Store Your Docker Compose File](#where-to-store-your-docker-compose-file)
+  - [Difference Between Detached and Non-Detached Mode](#difference-between-detached-and-non-detached-mode)
+  - [Key Docker Compose Commands](#key-docker-compose-commands)
 
 
 # Install Docker Desktop on your local machine
@@ -1000,6 +1007,86 @@ docker push gina98/sparta-test-app:v1
 
 <br>
 
-# Use Docker Compose to run app and database containers
-Task:
+# Research Docker Compose
+
+## What is Docker Compose?
+* Docker Compose is a tool for defining and running multi-container Docker applications. 
+* Instead of starting each container individually, Docker Compose lets you define all the services (like your app and its database) in one file. 
+* Then, you can start everything with a single command. It’s great for managing complex applications that require multiple containers to work together.
+
+## Why Use Docker Compose?
+Docker Compose helps by:
+
+* **Simplifying Configuration**: You can define all your app’s services (like databases, frontends, backends) in one YAML file called docker-compose.yml.
+* **Managing Dependencies**: Compose makes it easy to start containers in a specific order if needed, ensuring dependencies (e.g., the database starts before the app).
+* **Running Multi-Container Apps with One Command**: You can start, stop, and manage multiple containers with just one command instead of repeating commands for each container.
+
+## How to Use Docker Compose
+* Create a docker-compose.yml file: This file defines your services and their configurations, like images, ports, and environment variables.
+* Run the Docker Compose commands to start, stop, or manage your application.
+
+## What Do You Need to Install for Docker Compose to Work?
+* Docker: Make sure Docker is installed, as Compose relies on Docker itself.
+* Docker Compose: On some systems, Docker Compose is bundled with Docker, so you may not need to install it separately. 
+  * If you need to install it, follow the instructions on the Docker website.
+
+## Where to Store Your Docker Compose File
+* Store your docker-compose.yml file in the root directory of your project.
+* This makes it easier to run Compose commands from the same folder where your code and Dockerfiles are located.
+
+## Difference Between Detached and Non-Detached Mode
+* **Without** Detached Mode (docker-compose up): Runs in the foreground, showing real-time logs. 
+  * Great for monitoring or debugging.
+* **With** Detached Mode (docker-compose up -d): Runs in the background. 
+  * Ideal for when you don’t need to see logs right away or want the terminal free.
+
+## Key Docker Compose Commands
+These commands help manage and control your Docker Compose application:
+
+1. Start the Application (without Detached Mode)
+```bash
+docker-compose up
+```
+* This command starts all services defined in docker-compose.yml in the foreground. 
+* You’ll see the logs of each service in the terminal.
+
+**Use Case**: Good for development or debugging because you can see logs as they happen.
+
+2. Start the Application (in Detached Mode)
+```bash
+docker-compose up -d
+```
+* The -d flag runs Compose in detached mode, meaning it starts the containers in the background and lets you keep using the terminal.
+**Use Case**: Use detached mode when you don’t need to monitor the logs directly or want to continue using the terminal for other tasks.
+
+3. Stop the Application
+```bash
+docker-compose down
+```
+* Stops and removes the containers and any associated networks. 
+* It completely stops the Compose application.
+**Use Case**: Use this when you’re done working with the app and want to clean up.
+
+4. Check Services Running with Docker Compose
+```bash
+docker-compose ps
+```
+* Lists all containers running under the current Compose project.
+**Use Case**: Use this to check the status of each service and see if they’re running properly.
+
+5. View Logs in Real-Time
+```bash
+docker-compose logs -f
+```
+* Shows logs from all services. Adding -f (for “follow”) updates the logs in real time, similar to how you’d see logs in non-detached mode.
+**Use Case**: Good for monitoring applications running in detached mode.
+
+6. View Docker Compose Images
+```bash
+docker-compose images
+```
+* Lists the images used in the current Compose setup.
+**Use Case**: Check what images are being used by each service, which is helpful for version tracking or debugging.
+
+<br>
 
