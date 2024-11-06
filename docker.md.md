@@ -37,7 +37,7 @@
 - [Tuesday Code-Along, 05/11](#tuesday-code-along-0511)
   - [docker run](#docker-run)
     - [Why Specify Ports](#why-specify-ports)
-  - [How to stop this container.](#how-to-stop-this-container)
+  - [How to stop this container](#how-to-stop-this-container)
   - [Start and remove a container](#start-and-remove-a-container)
   - [Change a container from the inside](#change-a-container-from-the-inside)
   - [Change something inside the container](#change-something-inside-the-container)
@@ -58,6 +58,14 @@
   - [Step 5: Push the Image to Docker Hub](#step-5-push-the-image-to-docker-hub)
   - [Step 6: Run Command](#step-6-run-command)
   - [Check your browser!](#check-your-browser)
+- [Run Sparta test app in a container](#run-sparta-test-app-in-a-container)
+  - [Step 1: Create Dockerfile \& Add App Folder](#step-1-create-dockerfile--add-app-folder)
+  - [Step 2: Build the Docker Container](#step-2-build-the-docker-container)
+    - [Explanation](#explanation)
+  - [Step 3: Run the Docker Container](#step-3-run-the-docker-container)
+  - [Step 4: Push the Image to Docker Hub](#step-4-push-the-image-to-docker-hub)
+  - [Step 5: Check your browser!](#step-5-check-your-browser)
+- [Use Docker Compose to run app and database containers](#use-docker-compose-to-run-app-and-database-containers)
 
 
 # Install Docker Desktop on your local machine
@@ -335,7 +343,7 @@ Docker and microservices offer agility, consistency, and scalability, which is w
 * The Docker Daemon listens for Docker API requests and manages Docker objects.
 
 ## Docker CLI (Client)
-* *The Docker Command Line Interface (CLI) is a tool that allows users to interact with the Docker Daemon using commands. 
+* The Docker Command Line Interface (CLI) is a tool that allows users to interact with the Docker Daemon using commands. 
 * These commands use an API to communicate with the Docker Daemon, enabling users to manage containers, images, networks, and volumes.
 
 ## Docker Hub (Registry)
@@ -447,7 +455,7 @@ Specify the Image:
 
 <br>
 
-## How to stop this container. 
+## How to stop this container
   * You can use the container ID or the Name. 
   * `docker stop d18152c4c45c` or `docker stop sleepy_wu`
 
@@ -467,7 +475,7 @@ Specify the Image:
   * `docker start sleepy_wu` (insert container name or id)
 
 * Removing the container is different to removing the image.
-* When you remove a container, you are deleting the container instance, but the image it was created from remains intact.
+  * When you remove a container, you are deleting the container instance, but the image it was created from remains intact.
 
 * Remove a container:
   * `docker rm sleepy_wu` (insert container name or id)
@@ -545,7 +553,7 @@ Specify the Image:
 ## Change something inside the container
 * We want to change the default nginx page. 
   * `pwd`: to find out where you are.
-  * `ls` to see what#s around.
+  * `ls` to see what's around.
   * cd into the user folder `cd /usr` > `cd share` > `ls` >` cd nginx` > `cd html` > `ls` > `pwd`   
 
 ![alt text](./dk-images/image-21.png)
@@ -557,6 +565,8 @@ Specify the Image:
 * `nano index.html`
 
 ![alt text](./dk-images/image-22.png)
+
+* cd into the user folder `cd /usr` > `cd share` > `ls` >` cd nginx` > `cd html` > `ls` > `pwd`   
 
 ![alt text](./dk-images/image-23.png)
 
@@ -638,7 +648,8 @@ This is what our command will be based off:
  
 ## Step 5: Test on the Browser
 * Go to your web browser and search: localhost:82
-  * ':82': because this is the port we mapped to the container's port 80 when we ran the Docker container. 
+  * ':82': Maps port 82 on your host machine to port 80 on the container. 
+  * This means that any traffic to port 82 on your host will be forwarded to port 80 on the container, where Nginx is running.
 
 ![alt text](./dk-images/image-28.png)
 
@@ -738,13 +749,35 @@ cd tech264-mod-nginx-dockerfile
 
 ![alt text](./dk-images/image-36.png)
 
+Optional:
+* Add a maintainer.
+* This line adds metadata to the image, specifying the maintainer's contact information.
+```dockerfile
+# Maintainer information 
+LABEL maintainer="georgiastanley98@gmail.com"
+```
+
 ```dockerfile
 # Use the official Nginx base image
 FROM nginx:latest
 
 # Copy custom index.html to the default Nginx HTML location
 COPY index.html /usr/share/nginx/html/index.html
+
+# Expose port 80 # used to inform Docker that the container listens on port 80 at runtime.
+EXPOSE 80 
 ```
+
+'Expose Port 80' within Docker File: Seen as Best Practise. 
+
+(added after class code-along - best practise)
+* The EXPOSE 80 line in your Dockerfile is used to inform Docker that the container listens on port 80 at runtime. 
+* This is primarily for documentation purposes and does not actually publish the port to the host machine. 
+* It tells anyone reading the Dockerfile, as well as Docker itself, that the application inside the container expects to be accessed on port 80.
+
+Key Points:
+* **Documentation**: It serves as a form of documentation for users and developers to know which port the application inside the container is using.
+* **Networking**: It can be used by Docker to automatically map ports when using certain Docker networking features or orchestration tools like Docker Compose or Kubernetes.
 
 <br>
 
@@ -752,7 +785,7 @@ COPY index.html /usr/share/nginx/html/index.html
 * Still within the tech264-mod-nginx-dockerfile folder.
 * Build the image and tag it. 
   * Base it off of this command: docker build -t your_dockerhub_username/tech2xx-nginx-auto:v1 .
-  * `.`: means to use this directory and files. 
+  * `.`: means to use this current directory and files, (where the Dockerfile is located). 
 
 ```bash
 docker build -t gina98/tech264-nginx-auto:v1 .
@@ -803,4 +836,170 @@ docker run -d -p 84:80 gina98/tech264-nginx-auto:v1
 ![alt text](./dk-images/image-40.png)
 
 <br>
+
+# Run Sparta test app in a container
+* Just the app, not the database just yet.
+
+Task:
+**Aim**: Run node app in Docker container.
+
+**Duration**: 1 hour, then finish documentation.
+
+Steps for Dockerfile:
+* from which image: node.js v.20
+* label maintainer: your email. 
+* set the default working directory to /usr/src/app (where we want our app to be and where we'll be running from). 
+* copy app folder (to same place as Dockerfile, then copy to default location in container)
+  * Make a folder for this project.
+  * Put the app folder into this to make it easy to copy from. 
+* COPY app /usr/src/app
+* COPY package*.json ./
+* install dependencies with npm install
+* expose port: :3000
+* CMD [modify this to the right syntax: node app.js or npm start]
+
+<br>
+
+## Step 1: Create Dockerfile & Add App Folder
+* Navigate on your Git Bash terminal to where you want this project folder to be.
+  * Mine is located in my docments folder so that it's not at risk of being pushed.
+  * Folder name: tech264-docker-app-container
+    * Inside this folder, add your app folder, which should contain your application files (app.js, package.json, etc.).
+
+```bash
+mkdir tech264-docker-app-container
+cd tech264-docker-app-container
+```
+![cont-folder](./dk-images/cont-folder.png)
+
+* Copy the app on your local machine to the desired path (tech264-docker-app-container)
+  * Navigate into the folder with your app: sparta-test-app
+  * Make sure the contents are present by `cd` into the sparta-test-app.
+
+```bash
+cp -r "app" "~/user/georg/OneDrive - Sparta Global/Documents/tech264-docker-app-container/"
+```
+
+* Go back to the terminal where you are in your 'tech264-docker-app-container' 
+  * `ls` within the folder to check if the app has successfully copied. 
+  * `ls` within the app folder to check all of the contents are there. 
+
+![check-app](./dk-images/check-app.png)
+
+<br>
+
+## Step 2: Build the Docker Container
+
+* File name: Dockerfile
+  * Create the Dockerfile in the same directory as the app folder.
+  * `nano Dockerfile`
+
+```dockerfile
+# Use the Node.js v20 image
+FROM node:20-alpine3.20
+
+# Set the maintainer label
+LABEL maintainer="georgiastanley98@gmail.com"
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy the app folder and package.json files to the container
+COPY app /usr/src/app
+COPY package*.json ./
+
+# Install app dependencies
+RUN npm install
+
+# Expose the port the app will run on
+EXPOSE 3000
+
+# Set the command to run the app
+CMD ["npm", "start"]
+```
+
+### Explanation
+
+`FROM node:20-alpine3.20`
+* This line specifies the base image for the container. node:20-alpine3.20 is a lightweight version of Node.js 20 based on Alpine Linux, which helps reduce the final image size. 
+* Using an official Node.js image ensures that the environment includes everything needed to run Node.js applications.
+
+`LABEL maintainer="your-email@example.com"`
+* The LABEL command adds metadata to the Docker image, specifying the maintainer's email. 
+* This information is useful for tracking the image’s creator or who to contact if issues arise.
+
+`WORKDIR /usr/src/app`
+* WORKDIR defines the default working directory inside the container, where commands will be run and files will be added. 
+* Here, it sets /usr/src/app as the root directory for the app. 
+* Any subsequent commands in the Dockerfile will execute relative to this directory, keeping the file structure organized.
+
+`COPY app /usr/src/app`
+* copies the local app folder (which contains your application code) to the /usr/src/app directory in the container.
+
+`COPY package*.json ./`
+* copies package.json and package-lock.json (if it exists) into the current working directory (/usr/src/app). 
+* This allows Docker to access the dependency information in these files for the next step.
+
+`RUN npm install`
+* This command installs all the Node.js dependencies listed in package.json. 
+* Running npm install here rather than when the container is running ensures dependencies are available before the container starts. 
+* Caching will be used to speed up the build process if package.json hasn’t changed, reducing the time and resources needed for future builds.
+
+`EXPOSE 3000`
+* EXPOSE makes port 3000 available for communication between the container and the host machine. 
+* This port number should match the one the app is set to listen on. 
+* Exposing this port lets Docker know which port the containerised app will use, making it easier to map to the host machine's port later.
+
+
+`CMD ["node", "app.js"]`
+* CMD specifies the command that Docker will run when the container starts. 
+* Here, it uses npm start, which should be defined in package.json as the command to start your app (e.g., node app.js). 
+* This command launches the application in the container, so it’s ready to receive requests on port 3000.
+
+<br> 
+
+## Step 3: Run the Docker Container
+
+> Our commands will be based of: `docker run -d -p hostport:80 <dockerhub username>/<image name>:<tag>`
+
+* Within the tech264-docker-pp-container folder, you will complete these commands.
+* Login to Docker: `docker login`
+
+* After creating the Dockerfile, run these commands in your terminal:
+  * Build the Docker image: 
+```bash
+docker build -t gina98/sparta-test-app:v1 .
+```
+
+* Run the Docker container:
+```bash
+docker run -d -p 3002:3000 gina98/sparta-test-app:v1
+``` 
+
+* This maps the container’s port 3000 to your machine’s port 3000, allowing you to access the app at http://localhost:3000.
+
+<br>
+
+## Step 4: Push the Image to Docker Hub
+* Log in to Docker Hub if needed, then push the image.
+  * To log in: `docker login`
+  * To push the image: `docker push your_dockerhub_username/tech2xx-nginx-auto:v1`
+
+```bash
+docker push gina98/sparta-test-app:v1
+```
+
+![run-and-push](./dk-images/run-and-push.png)
+
+<br>
+
+## Step 5: Check your browser!
+* Go to your web browser and type: localhost:3002
+
+![app-page](./dk-images/app-page.png)
+
+<br>
+
+# Use Docker Compose to run app and database containers
+Task:
 
