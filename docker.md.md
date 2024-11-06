@@ -73,6 +73,14 @@
   - [Where to Store Your Docker Compose File](#where-to-store-your-docker-compose-file)
   - [Difference Between Detached and Non-Detached Mode](#difference-between-detached-and-non-detached-mode)
   - [Key Docker Compose Commands](#key-docker-compose-commands)
+- [Use Docker Compose to Manage Multi-Container Docker Applications](#use-docker-compose-to-manage-multi-container-docker-applications)
+  - [Step 1: Ensure Images Are Available](#step-1-ensure-images-are-available)
+  - [Step 2: Create docker-compose.yml](#step-2-create-docker-composeyml)
+  - [Step 3: Run the Application with Docker Compose](#step-3-run-the-application-with-docker-compose)
+  - [Step 4: Verify the Setup](#step-4-verify-the-setup)
+  - [Step 5: Seeding the Database](#step-5-seeding-the-database)
+    - [Manual Seeding](#manual-seeding)
+    - [Automatic Seeding](#automatic-seeding)
 
 
 # Install Docker Desktop on your local machine
@@ -884,7 +892,7 @@ cd tech264-docker-app-container
   * Make sure the contents are present by `cd` into the sparta-test-app.
 
 ```bash
-cp -r "app" "~/user/georg/OneDrive - Sparta Global/Documents/tech264-docker-app-container/"
+cp -r "app" "/c/Users/georg/OneDrive - Sparta Global/Documents/tech264-docker-app-container"
 ```
 
 * Go back to the terminal where you are in your 'tech264-docker-app-container' 
@@ -905,6 +913,9 @@ cp -r "app" "~/user/georg/OneDrive - Sparta Global/Documents/tech264-docker-app-
 # Use the Node.js v20 image
 FROM node:20-alpine3.20
 
+# Add a label to specify metadata, such as the purpose of this image
+LABEL description="Node.js app Docker container for test app"
+
 # Set the maintainer label
 LABEL maintainer="georgiastanley98@gmail.com"
 
@@ -913,7 +924,9 @@ WORKDIR /usr/src/app
 
 # Copy the app folder and package.json files to the container
 COPY app /usr/src/app
-COPY package*.json ./
+
+# Optional:
+COPY package*.json ./ 
 
 # Install app dependencies
 RUN npm install
@@ -1057,6 +1070,7 @@ docker-compose up
 docker-compose up -d
 ```
 * The -d flag runs Compose in detached mode, meaning it starts the containers in the background and lets you keep using the terminal.
+
 **Use Case**: Use detached mode when you don’t need to monitor the logs directly or want to continue using the terminal for other tasks.
 
 3. Stop the Application
@@ -1065,13 +1079,35 @@ docker-compose down
 ```
 * Stops and removes the containers and any associated networks. 
 * It completely stops the Compose application.
+* If you want to remove volumes as well: `docker-compose down -v`
+
 **Use Case**: Use this when you’re done working with the app and want to clean up.
+
+OR:
+
+Stopping Containers Without Removing Them: 
+```bash
+docker-compose stop
+```
+* You can stop the containers without removing them using docker-compose stop. 
+* This will stop the running containers but leave them in a stopped state, so you can start them again later without recreating them.
+
+OR:
+
+Removing Containers Without Removing Networks:
+```bash
+docker-compose rm
+```
+
+* If you want to remove the containers but keep the networks, you can use docker-compose rm. 
+* This command removes the stopped containers but leaves the networks intact.
 
 4. Check Services Running with Docker Compose
 ```bash
 docker-compose ps
 ```
 * Lists all containers running under the current Compose project.
+
 **Use Case**: Use this to check the status of each service and see if they’re running properly.
 
 5. View Logs in Real-Time
@@ -1079,6 +1115,7 @@ docker-compose ps
 docker-compose logs -f
 ```
 * Shows logs from all services. Adding -f (for “follow”) updates the logs in real time, similar to how you’d see logs in non-detached mode.
+
 **Use Case**: Good for monitoring applications running in detached mode.
 
 6. View Docker Compose Images
@@ -1086,7 +1123,164 @@ docker-compose logs -f
 docker-compose images
 ```
 * Lists the images used in the current Compose setup.
+
 **Use Case**: Check what images are being used by each service, which is helpful for version tracking or debugging.
 
 <br>
+
+# Use Docker Compose to Manage Multi-Container Docker Applications
+Task: to run app and database containers. 
+
+## Step 1: Ensure Images Are Available
+* Node App Image: Youalready have an image for your Node app (the microservice), (FROM node:20-alpine3.20).
+* MongoDB Image: For MongoDB, you’ll need to pull an official image. 
+  * The mongo image is the standard one, and you can specify a version like mongo7.0.6 for MongoDB version 7.0.6, which is widely compatible.
+* Go to your Git Bash terminal and run the pull command for mongoDB. 
+* We'll install this in the docker-compose.yml file. 
+
+<br> 
+
+## Step 2: Create docker-compose.yml
+The docker-compose.yml file will define two services:
+* app (for your Node.js application)
+* mongo (for the MongoDB database)
+
+Navigate to where you want to keep your file.
+* Mine is placed in my 'tech264-docker-app-container' folder. 
+
+```bash
+nano docker-compose.yml
+```
+
+Database half of the compose.yml file: 
+```yaml
+version: "3.8"
+services:
+  # MongoDB service
+  mongo:
+    image: mongo:7.0.6         # Use the official MongoDB image
+    container_name: mongo_db
+    ports:
+      - "27017:27017"         # Expose MongoDB port
+    volumes:
+      - mongo-data:/data/db   # Persist MongoDB data with a Docker volume
+    command: --bind_ip_all    # Allow connections from other containers
+
+  app:
+    image: gina98/sparta-test-app:v1  # Replace with your Docker Hub image name
+    container_name: app
+    depends_on:
+      - mongo                 # Ensures MongoDB starts before the app
+    ports:
+      - "3000:3000"           # Expose app on port 3000
+    environment:
+      - DB_HOST=mongodb://mongo:27017/posts         # Set MongoDB host environment variable
+      - DB_PORT=27017         # Optional: set MongoDB port if app needs it
+    command: sh -c "node seeds/seed.js && npm start"
+#    command: npm start        # Start the app with npm start
+
+volumes:
+  mongo-data:                 # Declare volume for MongoDB data persistence
+```
+
+* Ctrl+S, Ctrl+X: to save and exit. 
+
+<br>
+
+## Step 3: Run the Application with Docker Compose
+* Log in to make sure.
+  * `docker login`
+
+* In the terminal, run:
+```bash
+docker-compose up
+```
+* This will start both services in the foreground, showing logs from each.
+
+To start in detached mode (background), use:
+```bash
+docker-compose up -d
+```
+
+![alt text](./dk-images/compose-up.png)
+
+## Step 4: Verify the Setup
+* Go to the web browser and type: "localhost:3000/posts"
+
+![alt text](./dk-images/posts-app.png)
+
+* We now need to seed the database.
+
+<br>
+
+## Step 5: Seeding the Database
+
+### Manual Seeding
+* Log into the App Container. 
+* Use the following command to access the container and manually run the seed script.
+  * Make sure you have your container ID for the container you're using.
+```bash
+docker exec -it bb813a212a08 node seeds/seed.js
+```
+
+> Error: the input device is not a TTY.  If you are using mintty, try prefixing the command with 'winpty'
+
+* We need to add a winpty.
+```bash
+winpty docker exec -it bb813a212a08 node seeds/seed.js
+```
+
+![alt text](./dk-images/winpty.png)
+
+* Now refresh your posts page!
+
+![alt text](./dk-images/3000-posts.png)
+
+* Check your Docker Desktop.
+
+![alt text](./dk-images/docker-desk.png)
+
+<br> 
+
+### Automatic Seeding
+To seed the database automatically, you can use one of the following methods:
+
+1. Modify the App Service Command
+   * Add a line to your Docker Compose file to run the seed script automatically when the app container starts. 
+   * Update the command in the app service to run the seed script.
+   * This will run the seed script before starting the app.
+
+```yaml
+command: sh -c "node seeds/seed.js && npm start"
+```
+
+* You may have to stop the :3000 port from being occupied.
+```bash
+docker-compose down
+```
+
+![alt text](./dk-images/comp-down.png)
+
+* Now build it back up! and check your web browser!
+```bash
+docker-compose up -d
+```
+
+![alt text](./dk-images/posts.png)
+
+<br>
+
+2. Use MongoDB Initialisation Scripts: 
+   * MongoDB allows running initialisation scripts if you place them in the /docker-entrypoint-initdb.d folder in the MongoDB container. 
+   * Create a .js script with MongoDB seed commands and bind it to this directory in the mongo service.
+   * Replace ./mongo-seed.js with the path to your seed script. MongoDB will run this script on first startup.
+
+```bash
+mongo:
+  ...
+  volumes:
+    - ./mongo-seed.js:/docker-entrypoint-initdb.d/mongo-seed.js
+```
+
+<br> 
 
