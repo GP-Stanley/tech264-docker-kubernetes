@@ -24,15 +24,15 @@
   - [Pods](#pods-1)
 - [The Cluster Setup](#the-cluster-setup)
   - [Managed Service vs. Launching Your Own](#managed-service-vs-launching-your-own)
-  - [Pros of Managed Service:](#pros-of-managed-service)
-  - [Cons of Managed Service:](#cons-of-managed-service)
+    - [Pros of Managed Service](#pros-of-managed-service)
+    - [Cons of Managed Service](#cons-of-managed-service)
   - [Control Plane vs. Data Plane](#control-plane-vs-data-plane)
 - [Kubernetes Objects](#kubernetes-objects)
   - [What Does It Mean When a Pod is "Ephemeral"?](#what-does-it-mean-when-a-pod-is-ephemeral)
 - [Mitigating Security Concerns with Containers](#mitigating-security-concerns-with-containers)
   - [Maintained Images](#maintained-images)
-  - [Pros:](#pros)
-  - [Cons:](#cons)
+    - [Pros](#pros)
+    - [Cons](#cons)
 
 
 # Kubernetes
@@ -221,14 +221,15 @@ Source: https://www.logicmonitor.com/support/kubernetes-control-plane-monitoring
 <br>
 
 ## Managed Service vs. Launching Your Own
-* **Managed Service** (like Google Kubernetes Engine, Amazon EKS): Easier to set up and maintain, as the provider handles many aspects, like updates and scaling.
+* **Managed Service** (like Google Kubernetes Engine, Amazon EKS): 
+  * Easier to set up and maintain, as the provider handles many aspects, like updates and scaling.
 * **Self-Managed**: Offers full control but requires more expertise and management.
 
-## Pros of Managed Service:
+### Pros of Managed Service
 * Reduces the time and effort needed to set up and maintain Kubernetes.
 * Automatic updates and security patches.
 
-## Cons of Managed Service:
+### Cons of Managed Service
 * Limited customisation.
 * Potentially higher costs.
 
@@ -260,11 +261,11 @@ Source: https://www.logicmonitor.com/support/kubernetes-control-plane-monitoring
 * Maintained images are container images created and updated by a trusted source, like Docker or a cloud provider. 
 * They come with frequent updates, security patches, and optimisations.
 
-## Pros:
+### Pros
 * Saves time and effort as updates and patches are handled for you.
 * Generally more secure than unmaintained images.
 
-## Cons:
+### Cons
 * May not have all the customisation options you need.
 * Could be larger in size than a custom-built image.
 
