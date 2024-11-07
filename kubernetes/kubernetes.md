@@ -4,6 +4,7 @@
   - [Success Stories](#success-stories)
     - [Success Story: Spotify](#success-story-spotify)
 - [Kubernetes Architecture](#kubernetes-architecture)
+  - [Architecture Diagram: Master Nodes and Worker Nodes](#architecture-diagram-master-nodes-and-worker-nodes)
 - [Kubernetes terminology and architecture](#kubernetes-terminology-and-architecture)
   - [Pods](#pods)
   - [Deployments](#deployments)
@@ -12,13 +13,15 @@
   - [The Kubernetes control plane](#the-kubernetes-control-plane)
   - [Cluster](#cluster)
 - [Control Plane](#control-plane)
+  - [Controller manager](#controller-manager)
   - [API Server](#api-server)
   - [Scheduler](#scheduler)
-  - [Controller manager](#controller-manager)
+  - [etcd](#etcd)
 - [Worker node components](#worker-node-components)
   - [Kubelet](#kubelet)
   - [Kube proxy](#kube-proxy)
-  - [etcd](#etcd)
+  - [Container runtime](#container-runtime)
+  - [Pods](#pods-1)
 - [The Cluster Setup](#the-cluster-setup)
   - [Managed Service vs. Launching Your Own](#managed-service-vs-launching-your-own)
   - [Pros of Managed Service:](#pros-of-managed-service)
@@ -85,6 +88,14 @@ Diagram: A simple structure of a Kubernetes architecture:
 
 <br>
 
+## Architecture Diagram: Master Nodes and Worker Nodes
+
+![kube-arch](./kube-images/kube-arch1.png)
+
+Source: https://newrelic.com/de/blog/how-to-relic/what-is-kubernetes
+
+<br>
+
 # Kubernetes terminology and architecture
 
 ![kube-arch](./kube-images/kube-arch.png)
@@ -106,56 +117,74 @@ Example: Imagine you have a service that creates GIFs. One pod might have severa
 
 This setup helps manage the application efficiently and ensures all parts work together smoothly.
 
+![pod-arch](./kube-images/pod-arch.png)
+
+Source: https://www.wallarm.com/what/what-is-a-kubernetes-pod
+
 <br>
 
 ## Deployments
-* Kubernetes deployments define the scale at which you want to run your application by letting you set the details of how you would like pods replicated on your Kubernetes nodes. 
-* Deployments describe the number of desired identical pod replicas to run and the preferred update strategy used when updating the deployment. 
-* Kubernetes will track pod health, and will remove or add pods as needed to bring your application deployment to the desired state.
+* Kubernetes deployments *define the scale* at which you want to run your application by letting you set the details of *how you would like pods replicated* on your Kubernetes nodes. 
+* Deployments describe the **number of desired identical pod replicas to run** and the preferred update *strategy used when updating* the deployment. 
+* Kubernetes will **track pod health**, and will **remove or add pods** as needed to bring your application deployment to the **desired state**.
+
+![deploy](./kube-images/deploy.png)
 
 <br>
 
 ## Services
-* In Kubernetes, the lifetime of an individual pod is unpredictable; their IP addresses and existence can change. 
-* In the DevOps world, servers are often treated as either "pets" (cared for individually) or "cattle" (interchangeable). 
-* Kubernetes treats its pods like cattle, replacing them if they fail to ensure the application keeps running smoothly.
+* In Kubernetes, the lifetime of an individual pod is unpredictable; their **IP addresses** and **existence** can **change**. 
+* In the DevOps world, servers are often treated as either "pets" (cared for individually) or "cattle" (*interchangeable*). 
+* Kubernetes treats its pods like cattle, **replacing them if they fail** to ensure the application keeps running smoothly.
 
-* A **service** in Kubernetes is an abstraction that provides a stable interface for interacting with pods. 
-* As pods are replaced, their names and IPs might change, but the service maintains a consistent machine name or IP address. 
+![alt text](./kube-images/cat-pets.png)
+
+* A **service** in Kubernetes is an abstraction that provides a **stable interface for interacting with pods**. 
+* As pods are **replaced**, their **names** and **IPs** might **change**, but the **service maintains a consistent machine name or IP address**. 
 * This way, to the outside network, everything appears unchanged, even as the underlying pods are updated or replaced.
 
 <br>
 
 ## Nodes
-* A Kubernetes node manages and runs pods; it’s the machine (whether virtualised or physical) that performs the given work. 
-* Just as pods collect individual containers that operate together, a node collects entire pods that function together. 
+* A Kubernetes node **manages** and **runs pods**; it’s the **machine** (whether virtualised or physical) that **performs the given work**. 
+* Just as **pods collect individual containers that operate together**, a **node collects entire pods that function together**. 
 * When you’re operating at scale, you want to be able to hand work over to a node whose pods are free to take it.
 
 <br>
 
 ## The Kubernetes control plane
-* The Kubernetes control plane is the main entry point for administrators and users to manage the various nodes. 
+* The Kubernetes control plane is the **main entry point** for **administrators** and **users** to **manage the various nodes**. 
 * Operations are issued to it either through HTTP calls or connecting to the machine and running command-line scripts. 
-* As the name implies, it controls how Kubernetes interacts with your applications.
+* As the name implies, it **controls how Kubernetes interacts with your applications**.
 
 ## Cluster
 * A cluster is all of the above components put together as a single unit.
+
+![control-plane](./kube-images/control-plane.png)
+
+Source: https://www.logicmonitor.com/support/kubernetes-control-plane-monitoring-overview
 
 <br>
 
 # Control Plane
 
+## Controller manager
+* The controller-manager is responsible for making sure that the **shared state of the cluster is operating as expected**. 
+* More accurately, the controller manager **oversees various controllers which respond to events** (e.g., if a node goes down)
+
 ## API Server
-* The API server exposes a REST interface to the Kubernetes cluster. 
-* All operations against pods, services, and so forth, are executed programmatically by communicating with the endpoints provided by it.
+* The API server exposes a **REST interface** to the Kubernetes cluster. 
+* All **operations** against pods, services, and so forth, are **executed programmatically by communicating with the endpoints provided by it**.
 
 ## Scheduler
-* The scheduler is responsible for assigning work to the various nodes. 
-* It keeps watch over the resource capacity and ensures that a worker node’s performance is within an appropriate threshold.
+* The scheduler is responsible for **assigning work** to the various nodes. 
+* It keeps watch over the resource capacity and **ensures that a worker node’s performance is within an appropriate threshold**.
 
-## Controller manager
-* The controller-manager is responsible for making sure that the shared state of the cluster is operating as expected. 
-* More accurately, the controller manager oversees various controllers which respond to events (e.g., if a node goes down)
+## etcd
+`etcd`
+
+* is a distributed key-value store that Kubernetes uses to share information about the overall state of a cluster. 
+* Additionally, nodes can refer to the global configuration data stored there to set themselves up whenever they are regenerated.
 
 <br>
 
@@ -170,11 +199,17 @@ This setup helps manage the application efficiently and ensures all parts work t
 * The Kube proxy routes traffic coming into a node from the service. 
 * It forwards requests for work to the correct containers.
 
-## etcd
-`etcd`
+## Container runtime
+* This is responsible for working with the containers and executing them. 
+* It can be Docker or another container runtime, such as containerd or cri-o.
+* It uses the container runtime interface (CRI) to communicate with the kubelet.
 
-* is a distributed key-value store that Kubernetes uses to share information about the overall state of a cluster. 
-* Additionally, nodes can refer to the global configuration data stored there to set themselves up whenever they are regenerated.
+## Pods
+* These are groups of one or more containers that share storage and network resources, and a specification for how to run them. 
+* Pods are the smallest units of a Kubernetes application. 
+* They can be created and managed by workload resources, such as deployments or statefulsets. 
+
+![alt text](./kube-images/work-node.png)
 
 <br>
 
@@ -182,6 +217,8 @@ This setup helps manage the application efficiently and ensures all parts work t
 * A cluster is the basic setup for Kubernetes, where multiple computers work together as a single unit. The main parts are master nodes and worker nodes:
   * **Master Node**: Responsible for controlling and scheduling tasks within the cluster. It houses the control plane, where all the decision-making happens.
   * **Worker Nodes**: Run the application workloads and communicate with the master node.
+
+<br>
 
 ## Managed Service vs. Launching Your Own
 * **Managed Service** (like Google Kubernetes Engine, Amazon EKS): Easier to set up and maintain, as the provider handles many aspects, like updates and scaling.
