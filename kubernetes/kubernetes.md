@@ -141,7 +141,7 @@ Source: https://www.wallarm.com/what/what-is-a-kubernetes-pod
 
 * A **service** in Kubernetes is an abstraction that provides a **stable interface for interacting with pods**. 
 * As pods are **replaced**, their **names** and **IPs** might **change**, but the **service maintains a consistent machine name or IP address**. 
-* This way, to the outside network, everything appears unchanged, even as the underlying pods are updated or replaced.
+  * This way, to the outside network, everything appears unchanged, even as the underlying pods are updated or replaced.
 
 <br>
 
@@ -158,7 +158,7 @@ Source: https://www.wallarm.com/what/what-is-a-kubernetes-pod
 * As the name implies, it **controls how Kubernetes interacts with your applications**.
 
 ## Cluster
-* A cluster is all of the above components put together as a single unit.
+* A cluster is all of the below components put together as a single unit.
 
 ![control-plane](./kube-images/control-plane.png)
 
@@ -241,9 +241,11 @@ Source: https://www.logicmonitor.com/support/kubernetes-control-plane-monitoring
 
 # Kubernetes Objects
 * Kubernetes manages several types of objects that define different parts of an application.
-* **Pods**: The smallest deployable unit, containing one or more containers.
-* **Deployments**: Control how and where Pods are run, making it easy to roll out updates.
-* **ReplicaSets**: Ensure a specified number of identical Pods are running.
+  * **Pods**: The smallest deployable unit, containing one or more containers.
+  * **Deployments**: Control how and where Pods are run, making it easy to roll out updates.
+  * **ReplicaSets**: Ensure a specified number of identical Pods are running.
+
+![alt text](./kube-images/objects.png)
 
 ## What Does It Mean When a Pod is "Ephemeral"?
 * Pods are ephemeral, meaning they are *temporary*. 
@@ -252,7 +254,7 @@ Source: https://www.logicmonitor.com/support/kubernetes-control-plane-monitoring
 <br>
 
 # Mitigating Security Concerns with Containers
-* Containers can be vulnerable, so it’s important to:
+Containers can be vulnerable, so it’s important to:
 * Use maintained images (updated by trusted sources).
 * Limit container permissions.
 * Use security tools for scanning and monitoring containers.

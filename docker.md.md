@@ -280,6 +280,8 @@ Source: https://blog.bytebytego.com/p/virtualization-and-containerization
 # Microservices
 * Microservices are an architectural style where applications are broken down into small, independent services that each handle a specific function.
 
+> These services are isolated features of your system, separated from your dependencies, allowing you to create different containers to run each feature.
+
 ## What Are Microservices?
 * Microservices are an architectural style where applications are broken down into small, independent services that each handle a specific function.
 * Microservices are small, self-contained services that communicate with each other through APIs.
