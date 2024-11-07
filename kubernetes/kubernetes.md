@@ -2,7 +2,7 @@
   - [Why is Kubernetes Needed?](#why-is-kubernetes-needed)
   - [Benefits of Kubernetes](#benefits-of-kubernetes)
   - [Success Stories](#success-stories)
-    - [Success Story: Spotify](#success-story-spotify)
+    - [Spotify](#spotify)
 - [Kubernetes Architecture](#kubernetes-architecture)
   - [Architecture Diagram: Master Nodes and Worker Nodes](#architecture-diagram-master-nodes-and-worker-nodes)
 - [Kubernetes terminology and architecture](#kubernetes-terminology-and-architecture)
@@ -11,7 +11,9 @@
   - [Services](#services)
   - [Nodes](#nodes)
   - [The Kubernetes control plane](#the-kubernetes-control-plane)
-  - [Cluster](#cluster)
+- [What is a Cluster?](#what-is-a-cluster)
+  - [Key Components of a Kubernetes Cluster](#key-components-of-a-kubernetes-cluster)
+  - [Cluster Architecture/Diagram](#cluster-architecturediagram)
 - [Control Plane](#control-plane)
   - [Controller manager](#controller-manager)
   - [API Server](#api-server)
@@ -23,10 +25,12 @@
   - [Container runtime](#container-runtime)
   - [Pods](#pods-1)
 - [The Cluster Setup](#the-cluster-setup)
+  - [Master vs Worker Nodes](#master-vs-worker-nodes)
   - [Managed Service vs. Launching Your Own](#managed-service-vs-launching-your-own)
     - [Pros of Managed Service](#pros-of-managed-service)
     - [Cons of Managed Service](#cons-of-managed-service)
   - [Control Plane vs. Data Plane](#control-plane-vs-data-plane)
+    - [Azure Kubernetes Service (AKS) Specifics](#azure-kubernetes-service-aks-specifics)
 - [Kubernetes Objects](#kubernetes-objects)
   - [What Does It Mean When a Pod is "Ephemeral"?](#what-does-it-mean-when-a-pod-is-ephemeral)
 - [Mitigating Security Concerns with Containers](#mitigating-security-concerns-with-containers)
@@ -34,6 +38,7 @@
     - [Pros](#pros)
     - [Cons](#cons)
 
+<br>
 
 # Kubernetes
 * Kubernetes is a powerful tool in the world of cloud computing and software development.
@@ -44,17 +49,20 @@
 * Kubernetes automates the deployment, scaling, and operation of these containers, making it easier to manage complex applications across different servers.
 
 ## Benefits of Kubernetes
-* **Scalability**: Automatically adjusts the number of containers based on application load.
+* **Scalability**: Automatically adjusts the number of containers based on application load, (provides load balancing).
 * **Efficiency**: Helps you use resources (like CPU and memory) effectively, reducing costs.
 * **Portability**: Applications can run in many different environments (e.g., on-premises, cloud).
 * **High availability**: Keeps applications running even if some containers or servers fail.
 * **Self-healing**: Automatically restarts or replaces failed containers.
+* **Rollback**: Allows you to revert to a previous version of your application if something goes wrong with a new update, minimising downtime and keeping your users happy.
+* **Open-source**: Being open-source, Kubernetes benefits from a large community of contributors who continuously improve and update the platform, ensuring it stays cutting-edge and reliable.
+* **No single point of failure**: Distributes workloads across multiple nodes, ensuring that the failure of a single node does not bring down the entire application.
 
 ## Success Stories
 * Many companies like Google, Spotify, and Shopify use Kubernetes to run applications at scale, manage high traffic, and quickly deploy new features. 
 * It’s particularly popular among companies that rely on microservices architectures, where applications are split into smaller, manageable parts.
 
-### Success Story: Spotify
+### Spotify
 * **Challenge**: Spotify, a global audio-streaming platform, needed to manage its rapidly growing user base and complex microservices architecture. 
   * Initially, they used a homegrown container orchestration system called Helios, but it became clear that they needed a more robust solution supported by a larger community.
 
@@ -157,7 +165,29 @@ Source: https://www.wallarm.com/what/what-is-a-kubernetes-pod
 * Operations are issued to it either through HTTP calls or connecting to the machine and running command-line scripts. 
 * As the name implies, it **controls how Kubernetes interacts with your applications**.
 
-## Cluster
+<br>
+
+# What is a Cluster?
+* A cluster in computing is like a team of computers working together to achieve a common goal. 
+* Each computer in the cluster is called a node, and they all communicate and collaborate to run applications more efficiently and reliably.
+* It allows multiple computers to work together seamlessly, providing better performance, scalability, and reliability for running applications
+
+## Key Components of a Kubernetes Cluster
+Master Node:
+* **Control Plane**: This is the brain of the cluster. It manages the cluster, schedules applications, and handles the overall state of the system.
+* **API Server**: Acts as the front end for the Kubernetes control plane. It exposes the Kubernetes API.
+* **Scheduler**: Assigns work to the worker nodes based on resource availability.
+* **Controller Manager**: Ensures the desired state of the cluster matches the actual state.
+* **etcd**: A key-value store that holds all the data about the cluster's state.
+
+Worker Nodes:
+* **Kubelet**: An agent that runs on each worker node and ensures containers are running in a pod.
+* **Kube-proxy**: Manages network communication inside and outside the cluster.
+* **Container Runtime**: Software that runs the containers, such as Docker or containerd.
+
+<br>
+
+## Cluster Architecture/Diagram
 * A cluster is all of the below components put together as a single unit.
 
 ![control-plane](./kube-images/control-plane.png)
@@ -220,6 +250,31 @@ Source: https://www.logicmonitor.com/support/kubernetes-control-plane-monitoring
 
 <br>
 
+## Master vs Worker Nodes
+In a cluster, there are two main types of nodes: master nodes and worker nodes.
+
+Master Nodes:
+* These are the brains of the cluster. 
+* They manage and control everything that happens in the cluster. 
+* The master nodes decide which tasks need to be done and assign those tasks to the worker nodes. 
+* They also keep track of the overall health and status of the cluster.
+
+Worker Nodes:
+* These are the hands of the cluster. 
+* They do the actual work assigned by the master nodes. 
+* Each worker node runs applications and handles tasks like processing data, responding to user requests, and more. 
+* Worker nodes report back to the master nodes to let them know how things are going.
+
+> Summary
+> 
+> **Cluster**: A group of connected computers working together.
+> 
+> **Master Nodes**: Manage and control the cluster, assigning tasks to worker nodes.
+> 
+> **Worker Nodes**: Perform the tasks assigned by the master nodes, running applications and handling workloads.
+
+<br>
+
 ## Managed Service vs. Launching Your Own
 * **Managed Service** (like Google Kubernetes Engine, Amazon EKS): 
   * Easier to set up and maintain, as the provider handles many aspects, like updates and scaling.
@@ -228,6 +283,8 @@ Source: https://www.logicmonitor.com/support/kubernetes-control-plane-monitoring
 ### Pros of Managed Service
 * Reduces the time and effort needed to set up and maintain Kubernetes.
 * Automatic updates and security patches.
+* **Azure Kubernetes Service** (AKS): Simplifies deploying a managed Kubernetes cluster in Azure by offloading the operational overhead to Azure. 
+  * Azure handles critical tasks like health monitoring and maintenance.
 
 ### Cons of Managed Service
 * Limited customisation.
@@ -237,13 +294,24 @@ Source: https://www.logicmonitor.com/support/kubernetes-control-plane-monitoring
 * **Control Plane**: The brains of the cluster, handling the scheduling, monitoring, and scaling of applications.
 * **Data Plane**: Executes tasks and runs the application workloads on worker nodes.
 
+### Azure Kubernetes Service (AKS) Specifics
+Control Plane: 
+* Azure automatically creates and configures the control plane for you at no cost. 
+* The Azure platform manages the AKS control plane, which is responsible for the Kubernetes objects and worker nodes that you deploy to run your applications.
+
+Data Plane: 
+* The data plane consists of the worker nodes, which are Azure virtual machines (VMs) that run your applications. 
+* You only pay for the AKS nodes that run your applications.
+
+> By using AKS, you benefit from a fully managed Kubernetes service that simplifies the deployment, management, and scaling of containerised applications, allowing you to focus more on your applications and less on the underlying infrastructure.
+
 <br>
 
 # Kubernetes Objects
 * Kubernetes manages several types of objects that define different parts of an application.
-  * **Pods**: The smallest deployable unit, containing one or more containers.
   * **Deployments**: Control how and where Pods are run, making it easy to roll out updates.
   * **ReplicaSets**: Ensure a specified number of identical Pods are running.
+  * **Pods**: The smallest deployable unit, containing one or more containers.
 
 ![alt text](./kube-images/objects.png)
 
