@@ -29,10 +29,33 @@
   - [Managed Service vs. Launching Your Own](#managed-service-vs-launching-your-own)
     - [Pros of Managed Service](#pros-of-managed-service)
     - [Cons of Managed Service](#cons-of-managed-service)
-  - [Control Plane vs. Data Plane](#control-plane-vs-data-plane)
+  - [Launching Your Own](#launching-your-own)
+    - [Pros of Launching Your Own](#pros-of-launching-your-own)
+    - [Cons of Launching Your Own](#cons-of-launching-your-own)
+  - [Control Plane (Master Node) vs. Data Plane (Worker Node)](#control-plane-master-node-vs-data-plane-worker-node)
     - [Azure Kubernetes Service (AKS) Specifics](#azure-kubernetes-service-aks-specifics)
 - [Kubernetes Objects](#kubernetes-objects)
+- [ReplicaSets](#replicasets)
+  - [How It Works:](#how-it-works)
+  - [Example](#example)
+- [Pods](#pods-2)
+  - [Key Points](#key-points)
+    - [Group of Containers](#group-of-containers)
+    - [Shared IP Address](#shared-ip-address)
+    - [Ephemeral](#ephemeral)
   - [What Does It Mean When a Pod is "Ephemeral"?](#what-does-it-mean-when-a-pod-is-ephemeral)
+- [What is a Volume?](#what-is-a-volume)
+  - [Key Points](#key-points-1)
+    - [Persistent Storage](#persistent-storage)
+    - [Shared Storage](#shared-storage)
+    - [Types of Volumes](#types-of-volumes)
+- [Secrets in Kubernetes](#secrets-in-kubernetes)
+  - [Key Points](#key-points-2)
+    - [Base64 Encoding](#base64-encoding)
+    - [Encryption](#encryption)
+  - [Best Practices for Securing Secrets](#best-practices-for-securing-secrets)
+- [Name Space](#name-space)
+  - [Key Points](#key-points-3)
 - [Mitigating Security Concerns with Containers](#mitigating-security-concerns-with-containers)
   - [Maintained Images](#maintained-images)
     - [Pros](#pros)
@@ -269,7 +292,7 @@ Worker Nodes:
 > 
 > **Cluster**: A group of connected computers working together.
 > 
-> **Master Nodes**: Manage and control the cluster, assigning tasks to worker nodes.
+> **Master Nodes**: Manage and control the cluster, assigning tasks to worker nodes. On average you'll want a minimum of 3. 
 > 
 > **Worker Nodes**: Perform the tasks assigned by the master nodes, running applications and handling workloads.
 
@@ -290,16 +313,55 @@ Worker Nodes:
 * Limited customisation.
 * Potentially higher costs.
 
-## Control Plane vs. Data Plane
+<br>
+
+## Launching Your Own
+Launching your own Kubernetes service means setting up and managing your Kubernetes cluster independently, without relying on a managed service provider like Google Kubernetes Engine (GKE), Amazon EKS, or Azure Kubernetes Service (AKS).
+
+### Pros of Launching Your Own
+* **Full Control**: You have complete control over the configuration and management of your Kubernetes cluster.
+  * You can customise the setup to meet specific requirements and preferences.
+
+* **Cost Efficiency**: Potentially lower costs if you have the expertise and resources to manage the infrastructure efficiently.
+  * Avoids the premium costs associated with managed services.
+
+* **Flexibility**: You can choose your own hardware, cloud provider, or hybrid setup.
+  * Freedom to use any Kubernetes-compatible tools and integrations.
+
+* **Security**: You can implement custom security measures and policies tailored to your organisation's needs.
+  * Full control over data privacy and compliance.
+
+* **Learning and Expertise**: Provides an opportunity to gain in-depth knowledge and expertise in Kubernetes and container orchestration.
+  * Valuable for teams looking to build and maintain their own infrastructure skills.
+
+### Cons of Launching Your Own
+* **Complexity**: Setting up and managing a Kubernetes cluster can be complex and time-consuming.
+  * Requires a deep understanding of Kubernetes architecture and best practices.
+
+* **Maintenance**: You are responsible for all maintenance tasks, including updates, patches, and scaling.
+  * Ongoing monitoring and troubleshooting can be resource-intensive.
+
+* **Resource Requirements**: Requires significant resources, including skilled personnel and hardware.
+  * May need to invest in additional tools for monitoring, logging, and security.
+
+* **Risk of Downtime**: Higher risk of downtime if not managed properly.
+  * Requires robust disaster recovery and backup plans.
+
+* **Support**: Limited to community support unless you invest in third-party support services.
+  * May lack the immediate assistance available with managed services.
+
+
+## Control Plane (Master Node) vs. Data Plane (Worker Node)
+The master node works on the control plane, and the worker nodes work on the data plane. 
 * **Control Plane**: The brains of the cluster, handling the scheduling, monitoring, and scaling of applications.
 * **Data Plane**: Executes tasks and runs the application workloads on worker nodes.
 
 ### Azure Kubernetes Service (AKS) Specifics
-Control Plane: 
+Control Plane
 * Azure automatically creates and configures the control plane for you at no cost. 
 * The Azure platform manages the AKS control plane, which is responsible for the Kubernetes objects and worker nodes that you deploy to run your applications.
 
-Data Plane: 
+Data Plane
 * The data plane consists of the worker nodes, which are Azure virtual machines (VMs) that run your applications. 
 * You only pay for the AKS nodes that run your applications.
 
@@ -315,9 +377,100 @@ Data Plane:
 
 ![alt text](./kube-images/objects.png)
 
+<br>
+
+# ReplicaSets
+A ReplicaSet in Kubernetes is like a manager that ensures you always have a certain number of identical workers (called Pods) running at all times. 
+
+* **Pods**: Think of Pods as individual workers that do a specific job in your application.
+* **ReplicaSet**: The manager that keeps an eye on these workers.
+
+## How It Works:
+* **Desired Number**: You tell the ReplicaSet how many Pods you want running. For example, you might say, "I need 3 Pods running."
+* **Monitoring**: The ReplicaSet constantly monitors the Pods to make sure the desired number is running.
+* **Replacement**: If one of the Pods fails or stops working, the ReplicaSet will automatically create a new Pod to replace it, ensuring you always have the specified number of Pods running.
+
+## Example
+* Imagine you have a web application, and you want to make sure there are always 3 instances of it running to handle user requests. 
+* You create a ReplicaSet and set the desired number of Pods to 3. 
+* If one of the instances crashes, the ReplicaSet will notice and start a new instance to replace it, keeping your application running smoothly.
+
+![alt text](./kube-images/replica.png)
+
+<br>
+
+# Pods
+* A pod in Kubernetes is the smallest and simplest unit that you can create or deploy. 
+  * Think of it as a tiny, self-contained environment where your application runs.
+
+## Key Points
+### Group of Containers
+* A pod can contain one or more containers that share the same resources like memory and storage. 
+* These containers work together as a single application.
+
+### Shared IP Address
+* All containers within a pod share the same IP address, which makes it easy for them to communicate with each other.
+
+### Ephemeral
+* Pods are temporary and can be created, destroyed, and replaced as needed. 
+* If a pod fails, Kubernetes can automatically create a new one to replace it.
+
 ## What Does It Mean When a Pod is "Ephemeral"?
 * Pods are ephemeral, meaning they are *temporary*. 
 * If a Pod fails or is no longer needed, Kubernetes will terminate it and create a new one when necessary.
+
+<br>
+
+# What is a Volume?
+* A way to store the data for the pods.
+* A volume is a storage resource that is accessible to all containers within a pod. 
+* Unlike the ephemeral storage that containers use by default (which is lost when the container stops), volumes provide a way to persist data beyond the lifecycle of individual containers.
+
+## Key Points
+### Persistent Storage
+* Volumes allow data to be stored persistently, so it remains available even if the container restarts or the pod is rescheduled to a different node.
+
+### Shared Storage
+* All containers within a pod can access the same volume, making it easy to share data between them.
+
+### Types of Volumes
+* Kubernetes supports various types of volumes, such as emptyDir, hostPath, persistentVolumeClaim, configMap, and more. 
+* Each type serves different use cases and storage needs.
+
+<br>
+
+# Secrets in Kubernetes
+Secrets are encoded with base64 but this is not the same as being encrypted. 
+* Secrets in Kubernetes are used to store sensitive information, such as passwords, tokens, and keys. 
+* While they are encoded with base64, this encoding is not the same as encryption. 
+* **Base64** encoding is simply a way to represent binary data in an ASCII string format, making it easier to handle and transmit. 
+  * However, it does not provide any security or protection for the data.
+
+## Key Points
+### Base64 Encoding
+* Converts binary data into a text format using a set of 64 characters. 
+* This makes it easier to store and transmit data but does not secure it.
+
+### Encryption
+* Involves transforming data into a secure format that can only be read by someone with the correct decryption key. 
+* This provides a higher level of security compared to base64 encoding.
+
+## Best Practices for Securing Secrets
+* **Use Encryption**: Store secrets in an encrypted format to protect them from unauthorized access.
+* **Limit Access**: Restrict access to secrets to only those components and users that absolutely need it.
+* **Use External Secret Management Tools**: Consider using tools like HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault to manage and secure secrets outside of Kubernetes.
+* **Audit and Monitor**: Regularly audit and monitor access to secrets to detect and respond to any unauthorized access.
+
+<br>
+
+# Name Space
+* A logical way to group your resources for an application within a cluster. 
+  * Think of it as a virtual boundary that helps you manage and isolate different parts of your application or different environments (like development, testing, and production).
+
+## Key Points
+* **Logical Grouping**: Namespaces allow you to group resources (like pods, services, and deployments) for an application, making it easier to manage and organise them.
+* **Isolation**: They provide a level of isolation between different projects or teams, ensuring that resources in one namespace do not interfere with resources in another.
+* **Default Namespace**: If you don't specify a namespace when creating a resource, it will be placed in the default namespace.
 
 <br>
 
