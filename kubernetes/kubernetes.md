@@ -57,9 +57,14 @@
 - [Name Space](#name-space)
   - [Key Points](#key-points-3)
 - [Mitigating Security Concerns with Containers](#mitigating-security-concerns-with-containers)
+  - [How to mitigate security concerns with containers](#how-to-mitigate-security-concerns-with-containers)
   - [Maintained Images](#maintained-images)
+  - [Key Points](#key-points-4)
     - [Pros](#pros)
     - [Cons](#cons)
+- [Getting Kubernetes Running](#getting-kubernetes-running)
+  - [Docker Desktop](#docker-desktop)
+  - [Git Bash Window: `kubectl get service`](#git-bash-window-kubectl-get-service)
 
 <br>
 
@@ -390,12 +395,18 @@ A ReplicaSet in Kubernetes is like a manager that ensures you always have a cert
 * **Monitoring**: The ReplicaSet constantly monitors the Pods to make sure the desired number is running.
 * **Replacement**: If one of the Pods fails or stops working, the ReplicaSet will automatically create a new Pod to replace it, ensuring you always have the specified number of Pods running.
 
+> a ReplicaSet helps maintain the stability and reliability of your application by ensuring that the right number of Pods are always up and running.
+
 ## Example
 * Imagine you have a web application, and you want to make sure there are always 3 instances of it running to handle user requests. 
 * You create a ReplicaSet and set the desired number of Pods to 3. 
 * If one of the instances crashes, the ReplicaSet will notice and start a new instance to replace it, keeping your application running smoothly.
 
+<br> 
+
 ![alt text](./kube-images/replica.png)
+
+Source: https://stackoverflow.com/questions/66898830/kubernetes-internal-socket-io-connection
 
 <br>
 
@@ -456,10 +467,10 @@ Secrets are encoded with base64 but this is not the same as being encrypted.
 * This provides a higher level of security compared to base64 encoding.
 
 ## Best Practices for Securing Secrets
-* **Use Encryption**: Store secrets in an encrypted format to protect them from unauthorized access.
+* **Use Encryption**: Store secrets in an encrypted format to protect them from unauthorised access.
 * **Limit Access**: Restrict access to secrets to only those components and users that absolutely need it.
 * **Use External Secret Management Tools**: Consider using tools like HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault to manage and secure secrets outside of Kubernetes.
-* **Audit and Monitor**: Regularly audit and monitor access to secrets to detect and respond to any unauthorized access.
+* **Audit and Monitor**: Regularly audit and monitor access to secrets to detect and respond to any unauthorised access.
 
 <br>
 
@@ -480,18 +491,84 @@ Containers can be vulnerable, so it’s important to:
 * Limit container permissions.
 * Use security tools for scanning and monitoring containers.
 
+## How to mitigate security concerns with containers
+* **No Root Privliges**: NEVER run containers with root privileges. 
+  * Running containers as root can expose your system to significant security risks. 
+  * Always use the principle of least privilege.
+* **Monitoring and logging**: Implement monitoring and logging of container activity. 
+  * This helps detect and respond to suspicious behavior or potential security incidents in real-time. 
+* **Image Scanning**: Regularly scan container images for vulnerabilities using tools like Clair, Trivy, or Aqua Security. 
+  * This helps identify and fix security issues before deploying your containers.
+* **Network Policies**: Implement network policies to control traffic between pods. 
+  * This minimises the attack surface by restricting which pods can communicate with each other.
+* **Role-Based Access Control** (RBAC): Define and control permissions within the cluster using RBAC. 
+  * This ensures that only authorised users and services can access and modify resources.
+* **Namespace Isolation**: Use namespaces to separate environments within the cluster for different applications or teams. 
+  * This provides an additional layer of isolation and security.
+* **Use Trusted Sources**: Only deploy images from reliable and secure repositories. 
+  * Using maintained images from trusted sources ensures that your containers receive regular updates and security patches.
+
+<br>
+
 ## Maintained Images
 * Maintained images are container images created and updated by a trusted source, like Docker or a cloud provider. 
 * They come with frequent updates, security patches, and optimisations.
 
+## Key Points
+* **Frequent Updates**: Maintained images receive regular updates to fix bugs, improve performance, and patch security vulnerabilities.
+* **Trusted Sources**: These images are provided by reputable organizations, ensuring a higher level of trust and reliability.
+
 ### Pros
-* Saves time and effort as updates and patches are handled for you.
-* Generally more secure than unmaintained images.
+* **Saves Time and Effort**: Updates and patches are handled for you, reducing the time and effort needed to maintain the images.
+* **Security**: Generally more secure than unmaintained images, as they receive regular security patches and updates.
+* **Reliability**: Maintained images are usually tested and optimized for stability and performance, reducing the likelihood of encountering issues.
+* **Community Support**: Maintained images often come with extensive documentation and community support, making it easier to troubleshoot and resolve issues.
+* **Compliance**: These images are often compliant with industry standards and regulations, which can be crucial for certain applications.
 
 ### Cons
-* May not have all the customisation options you need.
-* Could be larger in size than a custom-built image.
+* **Limited Customisation**: May not have all the customization options you need for specific use cases.
+* **Larger Size**: Could be larger in size than a custom-built image, potentially using more resources.
+* **Dependency on External Updates**: Relying on external maintainers for timely updates could be risky if updates are delayed.
+* **Potential Bloat**: Maintained images might include unnecessary components that you don't need, which can increase the image size and resource usage.
+* **Compatibility Issues**: Sometimes, updates to maintained images can introduce compatibility issues with your existing setup, requiring additional testing and adjustments.
 
 > Kubernetes is a powerful way to manage applications efficiently and reliably at scale. With practice, the architecture and terms will become more familiar, helping you leverage all the benefits Kubernetes has to offer.
 
 <br>
+
+# Getting Kubernetes Running
+## Docker Desktop
+* Check that your Docker Desktop is running.
+  * Go to Settings.
+  * Go to Kubernetes (on the left)
+  * Enable Kubernetes.
+  * Click "Apply and Restart"
+
+![alt text](./kube-images/gitadmin.png)
+
+* If you have your Docker Desktop in a large window, you will be able to check if Kubernetes is running.
+
+![alt text](./kube-images/running.png)
+
+<br> 
+
+## Git Bash Window: `kubectl get service`
+* Go to your Git Bash window, (you may need administration if yours is not working).
+  * You can do this through the windows search bar.
+
+![alt text](./kube-images/admin.png)
+
+
+* `kubectl get service`: This command lists all the services in your Kubernetes cluster.
+
+  * Services in Kubernetes are used to expose your application running on a set of pods. 
+  * They provide a stable IP address and DNS name for accessing the application, even if the underlying pods change.
+
+![alt text](./kube-images/kubectl.png)
+
+`kubectl get all`
+* This command lists all the resources in your Kubernetes cluster, including pods, services, deployments, ReplicaSets, and more. 
+* It's a comprehensive command that gives you an overview of everything running in your cluste
+
+<br>
+
