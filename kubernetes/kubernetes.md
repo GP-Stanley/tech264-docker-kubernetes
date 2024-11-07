@@ -73,9 +73,13 @@
 - [My Interpretation of Kubernetes Architecture](#my-interpretation-of-kubernetes-architecture)
 - [K8s deployment of NodeJS Sparta test app](#k8s-deployment-of-nodejs-sparta-test-app)
   - [Create Deployment for mongodb-deploy.yml](#create-deployment-for-mongodb-deployyml)
+    - [Explanation](#explanation)
   - [Create a Service for MongoDB](#create-a-service-for-mongodb)
+    - [Explanation](#explanation-1)
   - [Create Deployment YAML for NodeJS App](#create-deployment-yaml-for-nodejs-app)
+    - [Explanation](#explanation-2)
   - [Create App Service](#create-app-service)
+    - [Explanation](#explanation-3)
   - [Run and Verify the Deployment](#run-and-verify-the-deployment)
     - [Blockers](#blockers)
   - [Deletion Commands](#deletion-commands)
@@ -83,7 +87,7 @@
   - [Check They're There](#check-theyre-there)
   - [Seeding the Database](#seeding-the-database)
     - [Copy the app folder](#copy-the-app-folder)
-    - [What's going on here?](#whats-going-on-here)
+    - [Explanation](#explanation-4)
 
 <br>
 
@@ -595,7 +599,7 @@ Containers can be vulnerable, so it’s important to:
 
 `kubectl get deploy`
 
-![alt text](image.png)
+![alt text](./kube-images/image.png)
 
 <br>
 
@@ -623,7 +627,7 @@ Editing on VSC
   * daraymonsta/nginx-257:dreamteam
   * This is mine: gina98/nginx_custom_task
 
-![alt text](image-1.png)
+![alt text](./kube-images/image-1.png)
 
 > You can still edit on Git Bash if you'd prefer. 
 
@@ -663,17 +667,17 @@ spec:
 * Check it's been deployed.
   * `kubectl get deploy`
 
-![alt text](image-2.png)
+![alt text](./kube-images/image-2.png)
 
 * `kubectl get replicasets`
 * `kubectl get pods`
 
-![alt text](image-3.png)
+![alt text](./kube-images/image-3.png)
 
 * Get them all at once:
   * `kubectl get all`
 
-![alt text](image-4.png)
+![alt text](./kube-images/image-4.png)
 
 * How to delete your deployment, (use the name of the deployment at the end).
   * `kubectl delete deploy nginx-deployment`
@@ -716,12 +720,12 @@ spec:
 * Check it's been created.
   * `kubectl get services`
 
-![alt text](image-5.png)
+![alt text](./kube-images/image-5.png)
 
 * Go to your local browser: localhost:30001 (this is because we have 30001 under port(s))
   * This means you've connected to one of your pods. 
 
-![alt text](image-6.png)
+![alt text](./kube-images/image-6.png)
 
 <br>
 
@@ -735,7 +739,7 @@ spec:
 Why has it been replaced?
 * Because it's self healing. 
 
-![alt text](image-7.png)
+![alt text](./kube-images/image-7.png)
 
 <br> 
 
@@ -747,7 +751,7 @@ Why has it been replaced?
    * Change your "replicas" from 3 to 4.
    * Save and exit.
 
-![alt text](image-8.png)
+![alt text](./kube-images/image-8.png)
 
 * Check if it's changed:
   * `kubectl get all`
@@ -760,12 +764,12 @@ Why has it been replaced?
    * Create and update configs using a yaml definition:
      * `kubectl apply -f nginx-deploy.yml`
 
-![alt text](image-9.png)
+![alt text](./kube-images/image-9.png)
 
 * `kubectl get all`
   * Now you can see that there are 5 pods!
 
-![alt text](image-10.png)
+![alt text](./kube-images/image-10.png)
 
 <br> 
 
@@ -774,7 +778,7 @@ Why has it been replaced?
    * `kubectl scale --current-replicas=5 --replicas=6 deployment.apps/nginx-deployment`
    * Check: `kubectl get all`
 
-![alt text](image-11.png)
+![alt text](./kube-images/image-11.png)
 
 <br>
 
@@ -784,7 +788,7 @@ It's best practise to delete things in a logical order: deploy, then service.
   * `kubectl delete -f nginx-service.yml`
   * `kubectl delete -f nginx-deploy.yml`
 
-![alt text](image-12.png)
+![alt text](./kube-images/image-12.png)
 
 * The 'delete' deletes the objects but not the yaml files. 
 
@@ -792,7 +796,7 @@ It's best practise to delete things in a logical order: deploy, then service.
 
 # My Interpretation of Kubernetes Architecture
 
-![alt text](image-15.png)
+![alt text](./kube-images/image-15.png)
 
 <br>
 
@@ -810,36 +814,91 @@ Guidance:
 <br>
 
 ## Create Deployment for mongodb-deploy.yml
+Create a yaml file called [mongo-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/mongodb-deploy.yml). This YAML script defines a Kubernetes Deployment for a MongoDB instance. 
 
-```yaml
-```
+### Explanation
+
+1. **apiVersion**: Specifies the API version to use for the deployment. In this case, it's `apps/v1`.
+2. **kind**: Specifies the kind of Kubernetes object to create. In this case, it's a `Deployment`.
+3. **metadata**: Provides metadata for the deployment, including the name of the deployment (`mongodb-deployment`).
+4. **spec**: Defines the specification for the deployment, including the following:
+   * **selector**: Specifies the label selector to match the pods managed by this deployment. In this case, it looks for pods with the label `app: mongodb`.
+   * **replicas**: Specifies the number of pod replicas to create. In this case, it creates 1 replica.
+   * **template**: Defines the pod template used to create the pods. This includes:
+     * **metadata**: Provides metadata for the pods, including the label `app: mongodb`.
+     * **spec**: Defines the specification for the pods, including the following:
+       * **containers**: Specifies the containers to run in the pods. In this case, it runs a single container with the following properties:
+       * **name**: The name of the container (`mongodb`).
+       * **image**: The Docker image to use for the container (`mongo:7.0.6`).
+       * **ports**: Specifies the ports to expose. In this case, it exposes port `27017`.
+
+> This script creates a Kubernetes Deployment that manages a single replica of a MongoDB pod using the mongo:7.0.6 Docker image. The pod is labeled with app: mongodb and exposes port 27017 for MongoDB connections.
 
 <br>
 
 ## Create a Service for MongoDB
+Create a yaml file called [mondobg-service](../k8s-yaml-definitions/local-nginx-deploy/mongodb-service.yml). This YAML script defines a Kubernetes Service for a MongoDB instance.
 
-```yaml
-```
+### Explanation
+1. **apiVersion**: Specifies the API version to use for the service. In this case, it's `v1`.
+2. **kind**: Specifies the kind of Kubernetes object to create. In this case, it's a `Service`.
+3. **metadata**: Provides metadata for the service, including the name of the service (`mongodb-svc`) and the namespace (`default`).
+4. **spec**: Defines the specification for the service, including the following:
+   * **ports**: Specifies the ports to expose. In this case:
+     * **nodePort**: `30002` - The port on each node where the service is exposed.
+     * **port**: `27017` - The port that the service listens on.
+     * **targetPort**: `27017` - The port on the pod that the service forwards traffic to.
+   * **selector**: Specifies the label selector to match the pods managed by this service. In this case, it looks for pods with the label `app: mongodb`.
+   * **type**: Specifies the type of service. In this case, it's a `NodePort` service, which exposes the service on a static port on each node's IP.
+
+> This script creates a Kubernetes Service that exposes the MongoDB instance running in the `default` namespace. The service listens on port `27017` and is accessible via the node port `30002`. The service forwards traffic to pods with the label `app: mongodb`.
 
 <br>
 
 ## Create Deployment YAML for NodeJS App
-* Copy the existing YAML files to a new folder for this deployment.
-* Change the file names, labels/tags, images used, and ports to match the new deployment requirements.
-  * nodejs-deploy.yml
+Create a yaml file called [nodejs-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/nodejs-deploy.yml). This YAML script defines a Kubernetes Deployment for your Sparta application.
 
-* Nano into the nodejs-deploy.yml file
-```yaml
-```
+### Explanation
+1. **apiVersion**: Specifies the API version to use for the deployment. In this case, it's `apps/v1`.
+2. **kind**: Specifies the kind of Kubernetes object to create. In this case, it's a `Deployment`.
+3. **metadata**: Provides metadata for the deployment, including the name of the deployment (`sparta-app-deployment`).
+4. **spec**: Defines the specification for the deployment, including the following:
+   * **selector**: Specifies the label selector to match the pods managed by this deployment. In this case, it looks for pods with the label `app: sparta-app`.
+   * **replicas**: Specifies the number of pod replicas to create. In this case, it creates 3 replicas.
+   * **template**: Defines the pod template used to create the pods. This includes:
+     * **metadata**: Provides metadata for the pods, including the label `app: sparta-app`.
+     * **spec**: Defines the specification for the pods, including the following:
+       * **containers**: Specifies the containers to run in the pods. In this case, it runs a single container with the following properties:
+         * **name**: The name of the container (`sparta-app`).
+         * **image**: The Docker image to use for the container (`gina98/sparta-test-app:v1`).
+         * **ports**: Specifies the ports to expose. In this case, it exposes port `3000`.
+         * **env**: Sets the environment variable `DB_HOST` to the MongoDB service's address.
+         * **command**: Specifies the shell to use (`/bin/sh`) with the `-c` option to run the command provided in the `args` section.
+         * **args**: Executes the following commands:
+           * `cd ../app`: Changes the directory to the parent directory and then into the "app" folder.
+           * `node seeds/seed.js`: Runs the Node.js script to seed the database.
+           * `npm start`: Starts the application using npm.
+
+> This script creates a Kubernetes Deployment that manages three replicas of a Sparta application pod using the gina98/sparta-test-app:v1 Docker image. The pods are labeled with app: sparta-app, expose port 3000, set the DB_HOST environment variable, and run the seed script to initialize the database before starting the application.
 
 <br>
 
 ## Create App Service
-* File name: nodejs-service.yml
+Create a yaml file called [nodejs-service.yml](../k8s-yaml-definitions/local-nginx-deploy/nodejs-service.yml). This YAML script defines a Kubernetes Service for your Sparta application.
 
-```yaml
-```
+### Explanation
+1. **apiVersion**: Specifies the API version to use for the service. In this case, it's `v1`.
+2. **kind**: Specifies the kind of Kubernetes object to create. In this case, it's a `Service`.
+3. **metadata**: Provides metadata for the service, including the name of the service (`sparta-app-svc`) and the namespace (`default`).
+4. **spec**: Defines the specification for the service, including the following:
+   * **ports**: Specifies the ports to expose. In this case:
+     * **nodePort**: `30003` - The port on each node where the service is exposed.
+     * **port**: `80` - The port that the service listens on.
+     * **targetPort**: `3000` - The port on the pod that the service forwards traffic to.
+   * **selector**: Specifies the label selector to match the pods managed by this service. In this case, it looks for pods with the label `app: sparta-app`.
+   * **type**: Specifies the type of service. In this case, it's a `NodePort` service, which exposes the service on a static port on each node's IP.
 
+> This script creates a Kubernetes Service that exposes the Sparta application running in the default namespace. The service listens on port 80 and is accessible via the node port 30003. The service forwards traffic to pods with the label app: sparta-app and directs it to port 3000 on those pods.
 
 <br>
 
@@ -850,8 +909,8 @@ Run these Kubernetes commands:
 * `kubectl create -f nodejs-deploy.yml`
 * `kubectl create -f  nodejs-service.yml`
 
-![alt text](image-14.png)
-![alt text](image-13.png)
+![alt text](./kube-images/image-14.png)
+![alt text](./kube-images/image-13.png)
 
 * `kubectl get pods`: to check the status of your pods and ensure they are running.
 * `kubectl get services`: to verify that your services are correctly configured and accessible.
@@ -892,11 +951,11 @@ Copy your app folder to your k8s-yaml-definitions folder (the parent directory t
 * Use the copy command:
   * `cp -r ~/OneDrive\ -\ Sparta\ Global/Documents/tech264-docker-app-container/app ~/OneDrive\ -\ Sparta\ Global/Documents/GitHub\ Repos/tech264-docker-kubernetes/k8s-yaml-definitions/`
 
-![alt text](image-16.png)
+![alt text](./kube-images/image-16.png)
 
 <br>
 
-* Navigate to the 'nodejs-deploy.yml' file.
+Navigate to the [nodejs-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/nodejs-deploy.yml) file and add the command to seed your database. 
 
 ```yaml
         env:
@@ -906,11 +965,11 @@ Copy your app folder to your k8s-yaml-definitions folder (the parent directory t
         args: ["cd ../app && node seeds/seed.js && npm start"]
 ```
 
-![alt text](image-17.png)
+![alt text](./kube-images/image-17.png)
 
 <br>
 
-### What's going on here?
+### Explanation
 **Environment Variable** (`env`):
 * **name**: `DB_HOST` - This is the name of the environment variable.
 * **value**: `"mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"`
@@ -930,3 +989,5 @@ Copy your app folder to your k8s-yaml-definitions folder (the parent directory t
   * `cd ../app`: Changes the directory to the parent directory and then into the "app" folder.
   * `node seeds/seed.js`: Runs the Node.js script to seed the database.
   * `npm start`: Starts the application using npm.
+
+<br>
