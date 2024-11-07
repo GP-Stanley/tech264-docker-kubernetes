@@ -1,0 +1,26 @@
+apiVersion: apps/v1 # specify api to use for deployment
+kind: Deployment # Kind of service/object to create
+metadata:
+  name: sparta-app-deployment # name the deployment
+spec:
+  selector:
+    matchLabels:
+      app: sparta-app # Look for this label/tag to match k8 service
+
+  # Create a ReplicaSet with instances/pods
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: sparta-app
+    spec:
+      containers:
+      - name: sparta-app
+        image: gina98/sparta-test-app:v1
+        ports: 
+        - containerPort: 3000
+        env:
+        - name: DB_HOST
+          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
+        command: ["/bin/sh", "-c"]
+        args: ["cd ../app && node seeds/seed.js && npm start"]

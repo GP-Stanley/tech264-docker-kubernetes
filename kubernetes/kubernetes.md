@@ -65,6 +65,25 @@
 - [Getting Kubernetes Running](#getting-kubernetes-running)
   - [Docker Desktop](#docker-desktop)
   - [Git Bash Window: `kubectl get service`](#git-bash-window-kubectl-get-service)
+- [Code-along](#code-along)
+  - [Create a Node Port Service for Nginx](#create-a-node-port-service-for-nginx)
+  - [Deleting a Pod](#deleting-a-pod)
+  - [Increase Number of Replicas](#increase-number-of-replicas)
+  - [How to Delete Everything](#how-to-delete-everything)
+- [My Interpretation of Kubernetes Architecture](#my-interpretation-of-kubernetes-architecture)
+- [K8s deployment of NodeJS Sparta test app](#k8s-deployment-of-nodejs-sparta-test-app)
+  - [Create Deployment for mongodb-deploy.yml](#create-deployment-for-mongodb-deployyml)
+  - [Create a Service for MongoDB](#create-a-service-for-mongodb)
+  - [Create Deployment YAML for NodeJS App](#create-deployment-yaml-for-nodejs-app)
+  - [Create App Service](#create-app-service)
+  - [Run and Verify the Deployment](#run-and-verify-the-deployment)
+    - [Blockers](#blockers)
+  - [Deletion Commands](#deletion-commands)
+  - [Creation Commands](#creation-commands)
+  - [Check They're There](#check-theyre-there)
+  - [Seeding the Database](#seeding-the-database)
+    - [Copy the app folder](#copy-the-app-folder)
+    - [What's going on here?](#whats-going-on-here)
 
 <br>
 
@@ -572,3 +591,342 @@ Containers can be vulnerable, so it’s important to:
 
 <br>
 
+# Code-along
+
+`kubectl get deploy`
+
+![alt text](image.png)
+
+<br>
+
+* cd into GitHub Repo folder.
+  * cd tech264-docker-kubernetes
+  * cd into that repo.
+
+Make another directory: 
+
+* `mkdir k8s-yaml-definitions`
+* cd k8s-yaml-definitions
+* `mkdir local-nginx-deploy`
+* cd into local-nginx-deploy
+* `pwd`: Path: /c/Users/georg/OneDrive - Sparta Global/Documents/GitHub Repos/tech264-docker-kubernetes/k8s-yaml-definitions/local-nginx-deploy
+
+<br>
+
+Make a yml file
+* `touch nginx-deploy.yml`
+* `ls` to check it the file is there. 
+
+Editing on VSC
+* If you go to the left side of your panel, you can see your yml file.
+* Within this file, I have used Ramon's image instead of my own. 
+  * daraymonsta/nginx-257:dreamteam
+  * This is mine: gina98/nginx_custom_task
+
+![alt text](image-1.png)
+
+> You can still edit on Git Bash if you'd prefer. 
+
+```yaml
+# YAML is case sensitive
+# use spaces NOT a tab when we have to indent
+
+# Specify the API you want to use for deployment
+apiVersion: apps/v1
+# What kind service/object you want to create
+kind: Deployment
+metadata:
+  name: nginx-deployment  # name the deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx # look for this label/tag to match with the k8 service
+
+  # Create a ReplicaSet with instances pods
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: gina98/nginx_custom_task # the image you created to run mod nginx
+        ports:
+        - containerPort: 80
+```
+
+
+* Run the file.
+  * `kubectl create -f nginx-deploy.yml`
+
+* Check it's been deployed.
+  * `kubectl get deploy`
+
+![alt text](image-2.png)
+
+* `kubectl get replicasets`
+* `kubectl get pods`
+
+![alt text](image-3.png)
+
+* Get them all at once:
+  * `kubectl get all`
+
+![alt text](image-4.png)
+
+* How to delete your deployment, (use the name of the deployment at the end).
+  * `kubectl delete deploy nginx-deployment`
+
+<br> 
+
+## Create a Node Port Service for Nginx
+Three main services:
+* **A Node Port**: easiest way to expose pods to the outsidw world through a port. 
+  * NodePort service can use 30000-32768
+* **Cluser IP**:The default type of service, which exposes the service on a cluster-internal IP. 
+  * This means the service is only accessible within the cluster.
+* **Load Balancer Service**: Exposes the service externally using a cloud provider's load balancer. 
+  * This is useful for distributing traffic across multiple pods and ensuring high availability.
+
+<br>
+
+* Create a new definition file within 'local-nginx-deploy' folder. 
+  * `nano nginx-service.yml`
+
+```yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+  namespace: default
+spec:
+  ports:
+  - nodePort: 30001	# range is 30000-32768
+    port: 80
+    targetPort: 80
+  selector:
+    app: nginx	# this label to match service to deployment
+  type: NodePort
+```
+
+* Run the file.
+  * `kubectl create -f nginx-service.yml`
+* Check it's been created.
+  * `kubectl get services`
+
+![alt text](image-5.png)
+
+* Go to your local browser: localhost:30001 (this is because we have 30001 under port(s))
+  * This means you've connected to one of your pods. 
+
+![alt text](image-6.png)
+
+<br>
+
+## Deleting a Pod
+* View your pods.
+  * `kubectl get pods`
+
+* Delete one of these.
+  * `kubectl delete pod nginx-deployment-77897d64b4-7r828`
+
+Why has it been replaced?
+* Because it's self healing. 
+
+![alt text](image-7.png)
+
+<br> 
+
+## Increase Number of Replicas
+
+1. We can directly edit the deployment in real time. 
+   * Use this command to search for the deployment: `kubectl get all`
+   * We can use: `kubectl edit deploy nginx-deployment`
+   * Change your "replicas" from 3 to 4.
+   * Save and exit.
+
+![alt text](image-8.png)
+
+* Check if it's changed:
+  * `kubectl get all`
+
+<br>
+
+2. Modify deployment file and apply it.
+   * `nano nginx-deploy.yml`: change 3 to 5.
+   * `kubectl get all`: we need to apply these changes. 
+   * Create and update configs using a yaml definition:
+     * `kubectl apply -f nginx-deploy.yml`
+
+![alt text](image-9.png)
+
+* `kubectl get all`
+  * Now you can see that there are 5 pods!
+
+![alt text](image-10.png)
+
+<br> 
+
+3. Use a command to increase the number of replica pods.
+   * Have the number of replicas available (i.e.,5).
+   * `kubectl scale --current-replicas=5 --replicas=6 deployment.apps/nginx-deployment`
+   * Check: `kubectl get all`
+
+![alt text](image-11.png)
+
+<br>
+
+## How to Delete Everything
+It's best practise to delete things in a logical order: deploy, then service. 
+* `kubectl delete -f <yaml.file>`
+  * `kubectl delete -f nginx-service.yml`
+  * `kubectl delete -f nginx-deploy.yml`
+
+![alt text](image-12.png)
+
+* The 'delete' deletes the objects but not the yaml files. 
+
+<br> 
+
+# My Interpretation of Kubernetes Architecture
+
+![alt text](image-15.png)
+
+<br>
+
+# K8s deployment of NodeJS Sparta test app
+Pre-Requisites:
+* Docker image for the NodeJS Sparta test app: gina98/sparta-test-app:v1
+* Database container Docker image: mongo:7.0.6
+
+Guidance:
+* Before you do it, draw a K8s architecture diagram and share it
+* Copy the YAML files we already used to a new folder for this deployment, but change the file names, label/tags, images used, ports
+* Deploy the app (3 replicas) without the database first, then
+* Make a another deployment folder that also includes the Mongo database (1 replica)
+
+<br>
+
+## Create Deployment for mongodb-deploy.yml
+
+```yaml
+```
+
+<br>
+
+## Create a Service for MongoDB
+
+```yaml
+```
+
+<br>
+
+## Create Deployment YAML for NodeJS App
+* Copy the existing YAML files to a new folder for this deployment.
+* Change the file names, labels/tags, images used, and ports to match the new deployment requirements.
+  * nodejs-deploy.yml
+
+* Nano into the nodejs-deploy.yml file
+```yaml
+```
+
+<br>
+
+## Create App Service
+* File name: nodejs-service.yml
+
+```yaml
+```
+
+
+<br>
+
+## Run and Verify the Deployment
+Run these Kubernetes commands: 
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f  nodejs-service.yml`
+
+![alt text](image-14.png)
+![alt text](image-13.png)
+
+* `kubectl get pods`: to check the status of your pods and ensure they are running.
+* `kubectl get services`: to verify that your services are correctly configured and accessible.
+* `kubectl get all`: to get all of the information in one. 
+
+### Blockers
+* In your app-service.yml when connecting with the database you need to change the NodePort and it can't be the same port as the db-service.yml.
+* Make sure you create the db-deploy.yml and db-service.yml as the app needs something to connect to.
+
+<br>
+
+## Deletion Commands
+* `kubectl delete service mongodb-svc`
+* `kubectl delete service sparta-app-svc` 
+* `kubectl delete deployment mongodb-deployment`
+* `kubectl delete deployment sparta-app-deployment`
+
+## Creation Commands
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f nodejs-service.yml`
+
+## Check They're There
+* `kubectl get all`
+
+<br>
+
+## Seeding the Database
+* This will need to be inputted after the environment variable within 'nodejs-deploy.yml' file.
+
+### Copy the app folder
+Path for app folder:
+* C:\Users\georg\OneDrive - Sparta Global\Documents\tech264-docker-app-container\app\seeds
+
+Copy your app folder to your k8s-yaml-definitions folder (the parent directory to the local-nginx-deploy').
+* Navigate to wherever your app folder is kept.
+* Use the copy command:
+  * `cp -r ~/OneDrive\ -\ Sparta\ Global/Documents/tech264-docker-app-container/app ~/OneDrive\ -\ Sparta\ Global/Documents/GitHub\ Repos/tech264-docker-kubernetes/k8s-yaml-definitions/`
+
+![alt text](image-16.png)
+
+<br>
+
+* Navigate to the 'nodejs-deploy.yml' file.
+
+```yaml
+        env:
+        - name: DB_HOST
+          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
+        command: ["/bin/sh", "-c"]
+        args: ["cd ../app && node seeds/seed.js && npm start"]
+```
+
+![alt text](image-17.png)
+
+<br>
+
+### What's going on here?
+**Environment Variable** (`env`):
+* **name**: `DB_HOST` - This is the name of the environment variable.
+* **value**: `"mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"`
+  * This is the value assigned to the `DB_HOST` variable, which points to the MongoDB service running in the Kubernetes cluster at the specified address and port.
+
+> When your application container starts, it will use this environment variable to connect to the MongoDB database at the given address. This allows your application to interact with the database without hardcoding the database URL in your application code.
+
+**Command** (`command`):
+* `command: ["/bin/sh", "-c"]`
+* This specifies the shell to use for executing the command. 
+* In this case, it uses the `/bin/sh` shell with the `-c` option to run the command provided in the args section.
+
+**Arguments** (args):
+* `args: ["cd ../app && node seeds/seed.js && npm start"]`
+  * This specifies the command to be executed by the shell. 
+  * It performs the following actions:
+  * `cd ../app`: Changes the directory to the parent directory and then into the "app" folder.
+  * `node seeds/seed.js`: Runs the Node.js script to seed the database.
+  * `npm start`: Starts the application using npm.

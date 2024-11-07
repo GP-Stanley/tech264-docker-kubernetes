@@ -1,0 +1,26 @@
+# YAML is case sensitive
+# use spaces NOT a tab when we have to indent
+
+# Specify the API you want to use for deployment
+apiVersion: apps/v1
+# What kind service/object you want to create
+kind: Deployment
+metadata:
+  name: nginx-deployment  # name the deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx # look for this label/tag to match with the k8 service
+
+  # Create a ReplicaSet with instances pods
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: gina98/nginx_custom_task # the image you created to run mod nginx
+        ports:
+        - containerPort: 80
