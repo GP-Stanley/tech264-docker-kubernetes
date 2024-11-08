@@ -7,8 +7,8 @@ metadata:
 spec:
   ports:
   - nodePort: 30003   # The port on each node where the service is exposed
-    port: 80    # The port that the service listens on.
-    targetPort: 3000    # The port on the pod that the service forwards traffic to.
+    port: 80          # The port that the service listens on.
+    targetPort: 3000  # The port on the pod that the service forwards traffic to.
   selector:
-    app: sparta-app # Label to match service to deployment
-  type: NodePort
+    app: sparta-app   # Label to match service to deployment
+  type: NodePort  # Used to be NodePort, changed for external IP for HPA

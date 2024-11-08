@@ -93,23 +93,6 @@
   - [6. Seeding the Database](#6-seeding-the-database)
     - [Copy the app folder](#copy-the-app-folder)
     - [Explanation](#explanation-4)
-- [Research Types of Autoscaling with K8s](#research-types-of-autoscaling-with-k8s)
-  - [What is Autoscaling?](#what-is-autoscaling)
-  - [Types of Autoscaling in Kubernetes](#types-of-autoscaling-in-kubernetes)
-    - [1. Horizontal Pod Autoscaling (HPA)](#1-horizontal-pod-autoscaling-hpa)
-    - [2. Vertical Pod Autoscaling (VPA)](#2-vertical-pod-autoscaling-vpa)
-    - [3. Cluster Autoscaling](#3-cluster-autoscaling)
-  - [Difference Between Vertical and Horizontal](#difference-between-vertical-and-horizontal)
-  - [Benefits of Autoscaling](#benefits-of-autoscaling)
-- [The key components of Kubernetes autoscaling](#the-key-components-of-kubernetes-autoscaling)
-  - [1. Resource Request](#1-resource-request)
-    - [Configuring the resource request](#configuring-the-resource-request)
-    - [Pod Disruption Budget](#pod-disruption-budget)
-  - [2. Pod Disruption Budget](#2-pod-disruption-budget)
-  - [3. Horizontal Pod Autoscaler](#3-horizontal-pod-autoscaler)
-  - [4. Cluster Autoscaler](#4-cluster-autoscaler)
-    - [Adding a node](#adding-a-node)
-    - [Removing a node](#removing-a-node)
 - [Upcoming Assessment Topics](#upcoming-assessment-topics)
   - [What are the implecations of a pod being ephemeral?](#what-are-the-implecations-of-a-pod-being-ephemeral)
   - [What is a maintained image and why should we use them?](#what-is-a-maintained-image-and-why-should-we-use-them)
@@ -144,6 +127,39 @@
   - [Seed Manually](#seed-manually)
   - [Delete MongoDB Pod/Deployment and Re-create](#delete-mongodb-poddeployment-and-re-create-1)
   - [Check for Persistent Data](#check-for-persistent-data)
+  - [Diagram Layout](#diagram-layout)
+- [Research Types of Autoscaling with K8s](#research-types-of-autoscaling-with-k8s)
+  - [What is Autoscaling?](#what-is-autoscaling)
+  - [Types of Autoscaling in Kubernetes](#types-of-autoscaling-in-kubernetes)
+    - [1. Horizontal Pod Autoscaling (HPA)](#1-horizontal-pod-autoscaling-hpa)
+    - [2. Vertical Pod Autoscaling (VPA)](#2-vertical-pod-autoscaling-vpa)
+    - [3. Cluster Autoscaling](#3-cluster-autoscaling)
+  - [Difference Between Vertical and Horizontal](#difference-between-vertical-and-horizontal)
+  - [Benefits of Autoscaling](#benefits-of-autoscaling)
+- [The key components of Kubernetes autoscaling](#the-key-components-of-kubernetes-autoscaling)
+  - [1. Resource Request](#1-resource-request)
+    - [Configuring the resource request](#configuring-the-resource-request)
+    - [Pod Disruption Budget](#pod-disruption-budget)
+  - [2. Pod Disruption Budget](#2-pod-disruption-budget)
+  - [3. Horizontal Pod Autoscaler](#3-horizontal-pod-autoscaler)
+  - [4. Cluster Autoscaler](#4-cluster-autoscaler)
+    - [Adding a node](#adding-a-node)
+    - [Removing a node](#removing-a-node)
+- [Use Horizontal Pod Autoscaler (HPA) to scale the app](#use-horizontal-pod-autoscaler-hpa-to-scale-the-app)
+  - [Steps to Implement HPA for Node.js Application](#steps-to-implement-hpa-for-nodejs-application)
+  - [Install Apache](#install-apache)
+  - [1. Define HPA for Node.js App](#1-define-hpa-for-nodejs-app)
+  - [2. Create HPA](#2-create-hpa)
+  - [3. Verify HPA Setup](#3-verify-hpa-setup)
+  - [4. Load Test with Apache Bench (ab)](#4-load-test-with-apache-bench-ab)
+  - [Install Metrics Server](#install-metrics-server)
+  - [Steps to Fix the Metrics Server](#steps-to-fix-the-metrics-server)
+- [Delete \& Create](#delete--create)
+  - [Delete all at once](#delete-all-at-once)
+  - [Delete MongoDB Pod/Deployment and Re-create:](#delete-mongodb-poddeployment-and-re-create-2)
+    - [Deletion Commands](#deletion-commands-3)
+    - [Creation Commands](#creation-commands-3)
+    - [Check They're There](#check-theyre-there-3)
 
 <br>
 
@@ -1099,6 +1115,413 @@ Navigate to the [nodejs-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/n
   * `node seeds/seed.js`: Runs the Node.js script to seed the database.
   * `npm start`: Starts the application using npm.
 
+<br> 
+
+# Upcoming Assessment Topics
+## What are the implecations of a pod being ephemeral?
+* persistent volumes can solve the issue of losing data.
+
+## What is a maintained image and why should we use them?
+* It's a container image originated from trusted sources, like docker.
+* They have regular updates, better security (receive regular security patches and updates).
+
+## What's the difference between DevOps, SRE and platform Engineering?
+**DevOps**
+* Focuses on collaboration between development and operations. 
+* Delivering code quicker to end users. 
+* Help the developers to be able to deliver their code faster for the end users so it can create value for the business. 
+  * Make a developers life easier. 
+* Provide consistent environments for the developers to use. 
+
+**SRE** (Site Reliability Engineering)
+* Focuses on reliability and uptime of services: aka, anything they need to do to keep things up and running. 
+* Makes sure that the changes that are applied don't break the infrastructure so the application is always available.
+  * They want the highest up-time possible. 
+
+**Platform Engineering**
+* Building and maintaining internal platforms.
+* Focuses on creating and managing the infrastructure that supports development teams.
+* Developing a platform/ecosystem where developers can access the tools and resources they need to perform their tasks efficiently.
+
+<br>
+
+### Table of Differences
+
+| **Aspect**          | **DevOps**                                      | **SRE (Site Reliability Engineering)**                  | **Platform Engineering**                              |
+|---------------------|-------------------------------------------------|--------------------------------------------------------|------------------------------------------------------|
+| **Focus**           | Collaboration between development and operations | Reliability and uptime of services                      | Building and maintaining internal platforms           |
+| **Key Activities**  | CI/CD, automation, monitoring, and collaboration | Monitoring, incident response, and automation           | Creating tools and infrastructure for developers      |
+| **Goal**            | Faster and more reliable software delivery       | Ensuring services are reliable and scalable             | Improving developer productivity and efficiency       |
+| **Approach**        | Cultural shift and practices                     | Applying software engineering to operations problems    | Providing reusable components and services            |
+
+<br>
+
+## How Secure are Kubernetes Secrets?
+* It's encoded, not encrypted.
+* Anyone with access to the namespace, where those secrets are stored, can access those secrets. 
+
+What would be better for production?
+* Avoid storing sensitive info in certain places by assigning particular roles. 
+* Azure Key-Vault, KMS (AWS): Manage secrets with a key vault.
+
+## What are the biggest challenges facing enterprises?
+* Vendor lock-in.
+  * Enterprises often become dependent on a single vendor for products and services, making it difficult and costly to switch providers.
+  * Organisations can get stuck with their data and how its structure because theyve chosen to use a managed service. 
+  * Vendors will store this data in a particular format, if they wat to change this, it's a huge challenge because it's stored in a particular way. 
+* Cost.
+* Keeping Data Secure.
+  * They may want to move their data to the cloud, but they're worried about keeping it secure. 
+  * They want to physically controll access to where their hardware is stored.
+  * They may not want to migrate the entire application onto the cloud because they may want to keep parts of those applications on-prem. 
+    * This results in a **hybrid** cloud solution.
+    * More complicated and requires more expertise. 
+
+## How do these organisations handle Kubernetes?
+* If they want to use Kubernetes, they have to abstract (seperate) the complexities of Kubernets and match them with certain developers. 
+* Challenges: higher complexities, more expertise, dedicated kubernetes team.
+
+## Why/when would a business NOT want to use a microservices architecture?
+* slow/low-runtime.
+* Small, simple application: fine to use a monolith. 
+* Early stages of development.
+* A business is not ready with having expertise available to handle the complexity of a microservices architecture.
+* Some organisations have a cult culture to develop monoliths. 
+* An application that needs to use every part of the database.
+  * The challenge of breaking this aplpication up might not be worth the change. Too big a challenge. 
+
+The main reason that makes one architecture more successful than the other: the culture of the organisation. 
+
+<br> 
+
+# Manually Seeding: log in to a pod and seed the database
+* For this task, I have commented out the command & args to seed the database in the nodejs-deploy.yml. 
+
+```yaml
+        env:
+        - name: DB_HOST
+          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
+#        command: ["/bin/sh", "-c"]
+#        args: ["cd ../app && node seeds/seed.js && npm start"]
+```
+
+* cd into 'local-nginx-deploy' and run all of your scripts in the correct order (db & app).
+
+Creation Commands
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f nodejs-service.yml`
+
+<br>
+
+Goal: log in to a pod and seed the database.
+
+* ` kubectl get all` to see your pods.
+* Copy this: 'sparta-app-deployment-b9c5777d7-brl8j'
+
+![alt text](./kube-images/1.png)
+
+* `kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
+
+![alt text](./kube-images/2.png)
+
+* Fix with the 'winpty' command. 
+  * `winpty kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
+
+![alt text](./kube-images/3.png)
+
+Why are we in the app folder?
+* Because we set the working directory in the dockerfile. 
+
+Now what?
+* Check your env variable is present.
+  * `printenv DB_HOST` or `echo $DB_HOST`
+
+![alt text](./kube-images/4.png)
+
+* Now seed the database.
+  * `node seeds/seed.js`
+
+![alt text](./kube-images/5.png)
+
+* Refresh your terminal.
+  * http://localhost:30003/posts
+
+![alt text](./kube-images/6.png)
+
+* Exit out.
+  * `exit`
+
+<br>
+
+### Deletion Commands
+* `kubectl delete service mongodb-svc`
+* `kubectl delete service sparta-app-svc` 
+* `kubectl delete deployment mongodb-deployment`
+* `kubectl delete deployment sparta-app-deployment`
+
+### Creation Commands
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f nodejs-service.yml`
+
+### Check They're There
+* `kubectl get all`
+
+<br> 
+
+# Persistent Volume (PV) and Persistent Volume Claim (PVC) for MongoDB
+* By using PV and PVC, you ensure that your MongoDB **data persists** even if the MongoDB pod is **deleted** or **rescheduled**. 
+* This setup provides a reliable way to **manage storage for stateful applications** like databases in Kubernetes
+
+**Persistent Volume** (PV)
+* A Persistent Volume (PV) in Kubernetes is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes. 
+* It is a resource in the cluster just like a node is a cluster resource. 
+* PVs are volume plugins like Volumes, but they have a lifecycle independent of any individual Pod that uses the PV.
+
+**Persistent Volume Claim** (PVC)
+* A Persistent Volume Claim (PVC) is a request for storage by a user. 
+* It is similar to a Pod. 
+* Pods consume node resources, and PVCs consume PV resources. 
+* PVCs can request specific size and access modes (e.g., they can be mounted ReadWriteOnce, ReadOnlyMany, ReadWriteMany, or ReadWriteOncePod).
+
+## Using PV and PVC for MongoDB
+When deploying MongoDB in Kubernetes, you can use PV and PVC to ensure that your MongoDB data is stored persistently.
+
+1. Create a Persistent Volume (PV):
+   * Define a PV that specifies the storage capacity, access modes, and storage backend (e.g., NFS, iSCSI, cloud storage).
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /data/mongo
+```
+
+2. Create a Persistent Volume Claim (PVC):
+   * Define a PVC that requests storage from the PV.
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+3. Use the PVC in the MongoDB Deployment:
+   * Reference the PVC in the MongoDB deployment to mount the persistent storage.
+
+For example:
+```yaml
+volumes: 
+- name: mongo-storage 
+  persistentVolumeClaim: 
+    claimName: mongo-pvc
+```
+
+<br>
+
+# Create 2-tier deployment with PV for database
+Task:
+
+**Pre-requisite**: You have the NodeJS app and MongoDB database working on Kubernetes, but you are not using a PV (persistent volume) yet for the database.
+
+* Create mongo-node deploy and volume (PV and PVC).
+* Be careful you don't allocate too much storage for the PV.
+* Remember to remove PV at the end (otherwise they will just stay there).
+
+Check them using these commands:
+* `kubectl get pv`
+* `kubectl get pvc`
+
+You will know you are successful if you:
+* Delete the database deployment or the database pod
+* Re-create the deployment or pod
+* The same data displays on the /posts page.
+
+Diagram (20min) your Kubernetes architecture with the PV and PVC
+* Have logical notes/dot points on your diagram, labels
+* Then send the link for to your diagram
+
+Links to help:
+* https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+
+<br>
+
+## Create a Persistent Volume (PV) for MongoDB
+This step ensures that the database has persistent storage that remains even if the MongoDB pod is deleted.
+
+[Persistent Volume (PV) Definition (YAML)](../k8s-yaml-definitions/local-nginx-deploy/mongodb-pv.yml)
+
+<br>
+
+## Create a Persistent Volume Claim (PVC) for MongoDB
+This step ensures that the database has persistent storage that remains even if the MongoDB pod is deleted.
+
+[Persistent Volume Claim (PVC) Definition (YAML)](../k8s-yaml-definitions/local-nginx-deploy/mongodb-pvc.yml)
+
+## Apply these configurations
+* `kubectl apply -f mongodb-pv.yml`
+* `kubectl apply -f mongodb-pvc.yml`
+
+<br>
+
+## Configure the MongoDB Deployment with PVC
+In the Mongodb-deploy.yml, reference the PVC to ensure data is stored persistently.
+
+```yaml
+        volumeMounts:
+        - name: mongo-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-storage
+        persistentVolumeClaim:
+          claimName: mongodb-pvc
+```
+
+## Apply the deployment
+* `kubectl apply -f mongodb-deploy.yml`
+
+<br>
+
+## Configure Node.js Deployment and Service
+The nodejs-deploy.yml and nodejs-service.yml need to connect to the MongoDB service within the same Kubernetes cluster.
+
+## Apply the configurations
+* `kubectl apply -f nodejs-deploy.yml`
+* `kubectl apply -f nodejs-service.yml`
+
+<br>
+
+## Testing Persistent Data
+1. Verify the PV and PVC Status.
+   * `kubectl get pv`
+   * `kubectl get pvc`
+
+![alt text](./kube-images/7.png)
+
+### What does this output mean?
+* **mongodb-pv**: This PV has a capacity of 100Mi, is set to be accessed in ReadWriteOnce (RWO) mode, and has a reclaim policy of Delete. 
+* Its status is Available, meaning it is not currently bound to any PVC.
+
+**pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0**: This PV has the same capacity and access mode as mongodb-pv, but its status is Bound, meaning it is currently bound to a PVC named mongodb-pvc in the default namespace.
+
+**mongodb-pvc**: This PVC is in the Bound status, meaning it is successfully bound to the PV named pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0. 
+It requests 100Mi of storage with ReadWriteOnce (RWO) access mode and uses the hostpath storage class.
+
+### Analysis of the output
+1. Persistent Volume (PV) Status
+   * The PV named mongodb-pv has a capacity of 100Mi and an access mode of RWO (ReadWriteOnce)
+   * The reclaim policy is set to Delete, which means the PV will be automatically deleted when it is no longer bound to a PVC
+   * The STATUS is "Available", meaning it’s ready for use
+   * Another entry shows the PV is "Bound" to pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0, indicating that it’s connected to a PVC, which is exactly what you wanted.
+
+2. Persistent Volume Claim (PVC) Status:
+   * The PVC named mongodb-pvc shows a status of "Bound", which confirms it has successfully claimed the PV
+   * It is bound to the PV pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0, confirming a connection between the PVC and the PV.
+
+### Summary
+* **mongodb-pv** is a Persistent Volume that is currently available and not bound to any PVC.
+* **pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0** is a Persistent Volume that is bound to the PVC named mongodb-pvc.
+* **mongodb-pvc** is a Persistent Volume Claim that is successfully bound to the PV pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0.
+
+This setup ensures that your MongoDB data is stored persistently, even if the MongoDB pod is deleted or rescheduled.
+
+<br>
+
+## Delete MongoDB Pod/Deployment and Re-create:
+* `kubectl delete deployment mongo`
+* `kubectl apply -f mongodb-deploy.yml`
+
+### Deletion Commands
+* `kubectl delete service mongodb-svc`
+* `kubectl delete service sparta-app-svc` 
+* `kubectl delete deployment mongodb-deployment`
+* `kubectl delete deployment sparta-app-deployment`
+
+### Creation Commands
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f nodejs-service.yml`
+
+### Check They're There
+* `kubectl get all`
+* `kubectl get pv`
+* `kubectl get pvc`
+
+<br> 
+
+## Seed Manually 
+Goal: log in to a pod and seed the database.
+
+* ` kubectl get all` to see your pods.
+* Copy this: 'sparta-app-deployment-b9c5777d7-662qj'
+
+![alt text](./kube-images/8.png)
+
+* With the 'winpty' command. 
+  * `winpty kubectl exec -it sparta-app-deployment-b9c5777d7-662qj -- sh`
+
+Why are we in the app folder?
+* Because we set the working directory in the dockerfile. 
+
+Now what?
+* Check your env variable is present.
+  * `printenv DB_HOST` or `echo $DB_HOST`
+
+* Now seed the database.
+  * `node seeds/seed.js`
+
+![alt text](./kube-images/9.png)
+
+* Refresh your terminal.
+  * http://localhost:30003/posts
+
+![alt text](./kube-images/10.png)
+
+* Exit out.
+  * `exit`
+
+<br>
+
+## Delete MongoDB Pod/Deployment and Re-create
+* This is to check the replicaset will duplicate what you've deleted.
+
+```yaml
+kubectl delete deployment mongodb-deployment
+kubectl apply -f mongodb-deploy.yml
+```
+
+## Check for Persistent Data
+* Access your Node.js app and check if previously created entries (e.g., /posts page data) are still available. 
+* This will confirm if the Persistent Volume setup is working correctly.
+
+![alt text](./kube-images/11.png)
+
+![alt text](./kube-images/12.png)
+
+<br> 
+
+## Diagram Layout
+![alt text](./kube-images/13.png)
+
 <br>
 
 # Research Types of Autoscaling with K8s
@@ -1286,341 +1709,214 @@ Reasons why a Pod can’t be moved;
 
 > The logs of the Cluster Autoscaler can tell you the actual reason, but when the Cluster Autoscaler is managed by the cloud provider you don’t always have access to that log.
 
-<br> 
-
-# Upcoming Assessment Topics
-## What are the implecations of a pod being ephemeral?
-* persistent volumes can solve the issue of losing data.
-
-## What is a maintained image and why should we use them?
-* It's a container image originated from trusted sources, like docker.
-* They have regular updates, better security (receive regular security patches and updates).
-
-## What's the difference between DevOps, SRE and platform Engineering?
-**DevOps**
-* Focuses on collaboration between development and operations. 
-* Delivering code quicker to end users. 
-* Help the developers to be able to deliver their code faster for the end users so it can create value for the business. 
-  * Make a developers life easier. 
-* Provide consistent environments for the developers to use. 
-
-**SRE** (Site Reliability Engineering)
-* Focuses on reliability and uptime of services: aka, anything they need to do to keep things up and running. 
-* Makes sure that the changes that are applied don't break the infrastructure so the application is always available.
-  * They want the highest up-time possible. 
-
-**Platform Engineering**
-* Building and maintaining internal platforms.
-* Focuses on creating and managing the infrastructure that supports development teams.
-* Developing a platform/ecosystem where developers can access the tools and resources they need to perform their tasks efficiently.
-
 <br>
 
-### Table of Differences
-
-| **Aspect**          | **DevOps**                                      | **SRE (Site Reliability Engineering)**                  | **Platform Engineering**                              |
-|---------------------|-------------------------------------------------|--------------------------------------------------------|------------------------------------------------------|
-| **Focus**           | Collaboration between development and operations | Reliability and uptime of services                      | Building and maintaining internal platforms           |
-| **Key Activities**  | CI/CD, automation, monitoring, and collaboration | Monitoring, incident response, and automation           | Creating tools and infrastructure for developers      |
-| **Goal**            | Faster and more reliable software delivery       | Ensuring services are reliable and scalable             | Improving developer productivity and efficiency       |
-| **Approach**        | Cultural shift and practices                     | Applying software engineering to operations problems    | Providing reusable components and services            |
-
-<br>
-
-## How Secure are Kubernetes Secrets?
-* It's encoded, not encrypted.
-* Anyone with access to the namespace, where those secrets are stored, can access those secrets. 
-
-What would be better for production?
-* Avoid storing sensitive info in certain places by assigning particular roles. 
-* Azure Key-Vault, KMS (AWS): Manage secrets with a key vault.
-
-## What are the biggest challenges facing enterprises?
-* Vendor lock-in.
-  * Enterprises often become dependent on a single vendor for products and services, making it difficult and costly to switch providers.
-  * Organisations can get stuck with their data and how its structure because theyve chosen to use a managed service. 
-  * Vendors will store this data in a particular format, if they wat to change this, it's a huge challenge because it's stored in a particular way. 
-* Cost.
-* Keeping Data Secure.
-  * They may want to move their data to the cloud, but they're worried about keeping it secure. 
-  * They want to physically controll access to where their hardware is stored.
-  * They may not want to migrate the entire application onto the cloud because they may want to keep parts of those applications on-prem. 
-    * This results in a **hybrid** cloud solution.
-    * More complicated and requires more expertise. 
-
-## How do these organisations handle Kubernetes?
-* If they want to use Kubernetes, they have to abstract (seperate) the complexities of Kubernets and match them with certain developers. 
-* Challenges: higher complexities, more expertise, dedicated kubernetes team.
-
-## Why/when would a business NOT want to use a microservices architecture?
-* slow/low-runtime.
-* Small, simple application: fine to use a monolith. 
-* Early stages of development.
-* A business is not ready with having expertise available to handle the complexity of a microservices architecture.
-* Some organisations have a cult culture to develop monoliths. 
-* An application that needs to use every part of the database.
-  * The challenge of breaking this aplpication up might not be worth the change. Too big a challenge. 
-
-The main reason that makes one architecture more successful than the other: the culture of the organisation. 
-
-<br> 
-
-# Manually Seeding: log in to a pod and seed the database
-* For this task, I have commented out the command & args to seed the database in the nodejs-deploy.yml. 
-
-```yaml
-        env:
-        - name: DB_HOST
-          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
-#        command: ["/bin/sh", "-c"]
-#        args: ["cd ../app && node seeds/seed.js && npm start"]
-```
-
-* cd into 'local-nginx-deploy' and run all of your scripts in the correct order (db & app).
-
-Creation Commands
-* `kubectl create -f mongodb-deploy.yml`
-* `kubectl create -f mongodb-service.yml`
-* `kubectl create -f nodejs-deploy.yml`
-* `kubectl create -f nodejs-service.yml`
-
-<br>
-
-Goal: log in to a pod and seed the database.
-
-* ` kubectl get all` to see your pods.
-* Copy this: 'sparta-app-deployment-b9c5777d7-brl8j'
-
-![alt text](image.png)
-
-* `kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
-
-![alt text](image-1.png)
-
-* Fix with the 'winpty' command. 
-  * `winpty kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
-
-![alt text](image-2.png)
-
-Why are we in the app folder?
-* Because we set the working directory in the dockerfile. 
-
-Now what?
-* Check your env variable is present.
-  * `printenv DB_HOST` or `echo $DB_HOST`
-
-![alt text](image-3.png)
-
-* Now seed the database.
-  * `node seeds/seed.js`
-
-![alt text](image-4.png)
-
-* Refresh your terminal.
-  * http://localhost:30003/posts
-
-![alt text](image-5.png)
-
-* Exit out.
-  * `exit`
-
-<br>
-
-### Deletion Commands
-* `kubectl delete service mongodb-svc`
-* `kubectl delete service sparta-app-svc` 
-* `kubectl delete deployment mongodb-deployment`
-* `kubectl delete deployment sparta-app-deployment`
-
-### Creation Commands
-* `kubectl create -f mongodb-deploy.yml`
-* `kubectl create -f mongodb-service.yml`
-* `kubectl create -f nodejs-deploy.yml`
-* `kubectl create -f nodejs-service.yml`
-
-### Check They're There
-* `kubectl get all`
-
-<br> 
-
-# Persistent Volume (PV) and Persistent Volume Claim (PVC) for MongoDB
-* By using PV and PVC, you ensure that your MongoDB **data persists** even if the MongoDB pod is **deleted** or **rescheduled**. 
-* This setup provides a reliable way to **manage storage for stateful applications** like databases in Kubernetes
-
-**Persistent Volume** (PV)
-* A Persistent Volume (PV) in Kubernetes is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes. 
-* It is a resource in the cluster just like a node is a cluster resource. 
-* PVs are volume plugins like Volumes, but they have a lifecycle independent of any individual Pod that uses the PV.
-
-**Persistent Volume Claim** (PVC)
-* A Persistent Volume Claim (PVC) is a request for storage by a user. 
-* It is similar to a Pod. 
-* Pods consume node resources, and PVCs consume PV resources. 
-* PVCs can request specific size and access modes (e.g., they can be mounted ReadWriteOnce, ReadOnlyMany, ReadWriteMany, or ReadWriteOncePod).
-
-## Using PV and PVC for MongoDB
-When deploying MongoDB in Kubernetes, you can use PV and PVC to ensure that your MongoDB data is stored persistently.
-
-1. Create a Persistent Volume (PV):
-   * Define a PV that specifies the storage capacity, access modes, and storage backend (e.g., NFS, iSCSI, cloud storage).
-
-```yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mongo-pv
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
-  hostPath:
-    path: /data/mongo
-```
-
-2. Create a Persistent Volume Claim (PVC):
-   * Define a PVC that requests storage from the PV.
-
-```yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mongo-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-```
-
-3. Use the PVC in the MongoDB Deployment:
-   * Reference the PVC in the MongoDB deployment to mount the persistent storage.
-
-For example:
-```yaml
-volumes: 
-- name: mongo-storage 
-  persistentVolumeClaim: 
-    claimName: mongo-pvc
-```
-
-<br>
-
-# Create 2-tier deployment with PV for database
+# Use Horizontal Pod Autoscaler (HPA) to scale the app
 Task:
-
-**Pre-requisite**: You have the NodeJS app and MongoDB database working on Kubernetes, but you are not using a PV (persistent volume) yet for the database.
-
-* Create mongo-node deploy and volume (PV and PVC).
-* Be careful you don't allocate too much storage for the PV.
-* Remember to remove PV at the end (otherwise they will just stay there).
-
-Check them using these commands:
-* `kubectl get pv`
-* `kubectl get pvc`
-
-You will know you are successful if you:
-* Delete the database deployment or the database pod
-* Re-create the deployment or pod
-* The same data displays on the /posts page.
-
-Diagram (20min) your Kubernetes architecture with the PV and PVC
-* Have logical notes/dot points on your diagram, labels
-* Then send the link for to your diagram
-
-Links to help:
-* https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+* Scale only the app (2 minimum, 10 maximum replicas).
+* Test your scaler works by load testing.
+* You could use Apache Bench (ab) for load testing.
 
 <br>
 
-## Create a Persistent Volume (PV) for MongoDB
-This step ensures that the database has persistent storage that remains even if the MongoDB pod is deleted.
+## Steps to Implement HPA for Node.js Application
+* Set up a Horizontal Pod Autoscaler (HPA) for scaling the Node.js app based on CPU utilisation.
+* The HPA will automatically adjust the number of Pod replicas according to the load on the application.
 
-Persistent Volume (PV) Definition (YAML)
+## Install Apache
+Source: https://www.apachelounge.com/download/
+
+![alt text](./kube-images/17.png)
+
+* create an alias for ab (alias ab=~/.apache/bin/ab.exe)
+* `nano .bashrc`
+* Insert: alias ab='~/.apache/bin/ab.exe'
+* Ctrl+S, Ctrl+X
+
+
+<br> 
+
+## 1. Define HPA for Node.js App
+* Ensure that your [nodejs-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/nodejs-deploy.yml) YAML file requests CPU resources. 
+* This allows Kubernetes to monitor CPU usage and autoscale based on the defined limits.
 
 ```yaml
+        resources:
+          requests:
+            cpu: "100m"     # Request 100 millicores (0.1 CPU)
+          limits:
+            cpu: "500m"     # Limit the app to 500 millicores (0.5 CPU)
+```
+
+* Apply this updated Deployment
+  * `kubectl apply -f nodejs-deploy.yml`
+
+<br> 
+
+## 2. Create HPA
+* Create an HPA that will scale the number of replicas between 2 and 10 based on CPU utilisation (for example, scaling up when CPU usage goes above 50%).
+
+```yaml
+# hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nodejs-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nodejs-app
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50  # Target 50% CPU utilization
+```
+
+* Apply the HPA configuration:
+  * `kubectl apply -f hpa.yml`
+
+<br>
+
+## 3. Verify HPA Setup
+* Check the status of the HPA to confirm it’s properly set up and monitoring the Node.js deployment.
+* You should see output that lists the current and target CPU utilization, along with the desired replica count based on current load.
+  * `kubectl get hpa`
+
+![alt text](./kube-images/14.png)
+
+<br>
+
+## 4. Load Test with Apache Bench (ab)
+* To simulate load on your application and test if the HPA scales the Pods, use Apache Bench (ab).
+  * `ab -n 10000 -c 100 http://<Node.js-Service-External-IP>:<port>/`
+
+* `-n 10000`: Total number of requests to send.
+* `-c 100`: Number of concurrent requests.
+* Replace `<Node.js-Service-External-IP>` and `<port>` with the external IP and port of your Node.js Service (you can get this by running kubectl get svc).
+
+You will need:
+* [nodejs-service.yml](../k8s-yaml-definitions/local-nginx-deploy/nodejs-service.yml) external IP. 
+* Port number with the external IP. 
+
+How to get the external IP:
+* nano into the [](../k8s-yaml-definitions/local-nginx-deploy/nodejs-service.yml) yaml file and change "NodePort" to "LoadBalancer".
+
+```yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sparta-app-svc
+  namespace: default
+spec:
+  ports:
+  - nodePort: 30003   # The port on each node where the service is exposed
+    port: 80    # The port that the service listens on.
+    targetPort: 3000    # The port on the pod that the service forwards traffic to.
+  selector:
+    app: sparta-app # Label to match service to deployment
+  type: LoadBalancer # used to be NodePort, changed for external IP for hpa
+```
+
+* Apply and update these changes.
+  * `kubectl apply -f nodejs-service.yml`
+* Check this has refreshed.
+  * `kubectl get services`
+
+![alt text](./kube-images/15.png)
+
+<br>
+
+* To simulate load on your application and test if the HPA scales the Pods, use Apache Bench (ab).
+  * `ab -n 20000 -c 200 http://localhost:30003/`
+
+* To view if pods have been made:
+  * `kubectl get pods`
+
+![alt text](./kube-images/16.png)
+
+<br>
+
+## Install Metrics Server
+1. Install Metrics Server
+* This command installs the Metrics Server in your Kubernetes cluster. 
+* The Metrics Server is responsible for collecting resource usage data (CPU and memory) from the nodes and pods in your cluster.
+
+```yaml
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
+
+2. Check Metrics Server Logs.
+* This command retrieves the logs from the Metrics Server deployment in the kube-system namespace. 
+* It helps you diagnose any issues with the Metrics Server by showing its log output.
+
+```yaml
+kubectl logs -n kube-system deployment/metrics-server
+```
+
+3. List Metrics Server Pods.
+* This command lists all the pods in the kube-system namespace that have the label k8s-app=metrics-server. 
+* It helps you verify that the Metrics Server pods are running.
+
+```yaml
+kubectl get pods -n kube-system -l k8s-app=metrics-server
 ```
 
 <br>
 
-## Create a Persistent Volume Claim (PVC) for MongoDB
-This step ensures that the database has persistent storage that remains even if the MongoDB pod is deleted.
-
-Persistent Volume Claim (PVC) Definition (YAML)
-
+## Steps to Fix the Metrics Server
+1. Check Metrics Server Logs
+   * Review the logs for the Metrics Server to identify any errors:
 ```yaml
+kubectl -n kube-system logs deployment/metrics-server
 ```
 
-## Apply these configurations
-* `kubectl apply -f mongodb-pv.yml`
-* `kubectl apply -f mongodb-pvc.yml`
-
-<br>
-
-## Configure the MongoDB Deployment with PVC
-In the Mongodb-deploy.yml, reference the PVC to ensure data is stored persistently.
+2. Patch the Metrics Server Deployment
+   * Since the logs previously indicated a TLS certificate validation error, let's ensure the Metrics Server is configured to bypass this validation. 
+   * You can patch the deployment to add the --kubelet-insecure-tls argument:
 
 ```yaml
-        volumeMounts:
-        - name: mongo-storage
-          mountPath: /data/db
-      volumes:
-      - name: mongo-storage
-        persistentVolumeClaim:
-          claimName: mongodb-pvc
+kubectl patch deployment metrics-server -n kube-system --type='json' -p='[
+  {
+    "op": "add",
+    "path": "/spec/template/spec/containers/0/args/-",
+    "value": "--kubelet-insecure-tls"
+  }
+]'
 ```
 
-## Apply the deployment
-* `kubectl apply -f mongodb-deploy.yml`
+3. Verify the Metrics Server Deployment
+   * After patching, check the status of the Metrics Server deployment again:
+```yaml
+kubectl get deployment -n kube-system metrics-server
+```
+
+4. Check Metrics Availability
+   * Once the Metrics Server is running, verify that metrics are available:
+```yaml
+kubectl top nodes
+kubectl top pods
+```
+
+5. Monitor HPA
+   * After ensuring the Metrics Server is running and metrics are available, monitor the HPA to see if it starts reporting CPU metrics correctly:
+```yaml
+kubectl get hpa
+```
 
 <br>
 
-## Configure Node.js Deployment and Service
-The nodejs-deploy.yml and nodejs-service.yml need to connect to the MongoDB service within the same Kubernetes cluster.
+# Delete & Create
 
-## Apply the configurations
-* `kubectl apply -f nodejs-deploy.yml`
-* `kubectl apply -f nodejs-service.yml`
-
-<br>
-
-## Testing Persistent Data
-1. Verify the PV and PVC Status.
-   * `kubectl get pv`
-   * `kubectl get pvc`
-
-![alt text](image-6.png)
-
-### What does this output mean?
-* **mongodb-pv**: This PV has a capacity of 100Mi, is set to be accessed in ReadWriteOnce (RWO) mode, and has a reclaim policy of Delete. 
-* Its status is Available, meaning it is not currently bound to any PVC.
-
-**pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0**: This PV has the same capacity and access mode as mongodb-pv, but its status is Bound, meaning it is currently bound to a PVC named mongodb-pvc in the default namespace.
-
-**mongodb-pvc**: This PVC is in the Bound status, meaning it is successfully bound to the PV named pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0. 
-It requests 100Mi of storage with ReadWriteOnce (RWO) access mode and uses the hostpath storage class.
-
-### Analysis of the output
-1. Persistent Volume (PV) Status
-   * The PV named mongodb-pv has a capacity of 100Mi and an access mode of RWO (ReadWriteOnce)
-   * The reclaim policy is set to Delete, which means the PV will be automatically deleted when it is no longer bound to a PVC
-   * The STATUS is "Available", meaning it’s ready for use
-   * Another entry shows the PV is "Bound" to pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0, indicating that it’s connected to a PVC, which is exactly what you wanted.
-
-2. Persistent Volume Claim (PVC) Status:
-   * The PVC named mongodb-pvc shows a status of "Bound", which confirms it has successfully claimed the PV
-   * It is bound to the PV pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0, confirming a connection between the PVC and the PV.
-
-### Summary
-* **mongodb-pv** is a Persistent Volume that is currently available and not bound to any PVC.
-* **pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0** is a Persistent Volume that is bound to the PVC named mongodb-pvc.
-* **mongodb-pvc** is a Persistent Volume Claim that is successfully bound to the PV pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0.
-
-This setup ensures that your MongoDB data is stored persistently, even if the MongoDB pod is deleted or rescheduled.
-
-<br>
+## Delete all at once
+* `kubectl delete /local-nginx-deploy`
+* `kubectl apply /local-nginx-deploy`
 
 ## Delete MongoDB Pod/Deployment and Re-create:
 * `kubectl delete deployment mongo`
@@ -1631,67 +1927,17 @@ This setup ensures that your MongoDB data is stored persistently, even if the Mo
 * `kubectl delete service sparta-app-svc` 
 * `kubectl delete deployment mongodb-deployment`
 * `kubectl delete deployment sparta-app-deployment`
+* `kubectl delete pvc mongodb-pvc`
+* `kubectl delete pv mongodb-pv`
 
 ### Creation Commands
 * `kubectl create -f mongodb-deploy.yml`
 * `kubectl create -f mongodb-service.yml`
 * `kubectl create -f nodejs-deploy.yml`
 * `kubectl create -f nodejs-service.yml`
+* `kubectl apply -f hpa.yml`
 
 ### Check They're There
 * `kubectl get all`
 * `kubectl get pv`
 * `kubectl get pvc`
-
-<br> 
-
-## Seed Manually 
-Goal: log in to a pod and seed the database.
-
-* ` kubectl get all` to see your pods.
-* Copy this: 'sparta-app-deployment-b9c5777d7-662qj'
-
-![alt text](image-7.png)
-
-* With the 'winpty' command. 
-  * `winpty kubectl exec -it sparta-app-deployment-b9c5777d7-662qj -- sh`
-
-Why are we in the app folder?
-* Because we set the working directory in the dockerfile. 
-
-Now what?
-* Check your env variable is present.
-  * `printenv DB_HOST` or `echo $DB_HOST`
-
-* Now seed the database.
-  * `node seeds/seed.js`
-
-![alt text](image-8.png)
-
-* Refresh your terminal.
-  * http://localhost:30003/posts
-
-![alt text](image-9.png)
-
-* Exit out.
-  * `exit`
-
-<br>
-
-## Delete MongoDB Pod/Deployment and Re-create
-* This is to check the replicaset will duplicate what you've deleted.
-
-```yaml
-kubectl delete deployment mongodb-deployment
-kubectl apply -f mongodb-deploy.yml
-```
-
-## Check for Persistent Data
-* Access your Node.js app and check if previously created entries (e.g., /posts page data) are still available. 
-* This will confirm if the Persistent Volume setup is working correctly.
-
-![alt text](image-10.png)
-
-![alt text](image-11.png)
-
-<br> 

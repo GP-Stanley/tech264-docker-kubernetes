@@ -19,6 +19,8 @@ spec:
         image: mongo:7.0.6
         ports: 
         - containerPort: 27017
+      
+      # Added PV and PVC
         volumeMounts:
         - name: mongo-storage
           mountPath: /data/db
