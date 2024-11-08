@@ -72,22 +72,39 @@
   - [How to Delete Everything](#how-to-delete-everything)
 - [My Interpretation of Kubernetes Architecture](#my-interpretation-of-kubernetes-architecture)
 - [K8s deployment of NodeJS Sparta test app](#k8s-deployment-of-nodejs-sparta-test-app)
-  - [Create Deployment for mongodb-deploy.yml](#create-deployment-for-mongodb-deployyml)
+  - [1. Create Deployment for mongodb-deploy.yml](#1-create-deployment-for-mongodb-deployyml)
     - [Explanation](#explanation)
-  - [Create a Service for MongoDB](#create-a-service-for-mongodb)
+  - [2. Create a Service for MongoDB](#2-create-a-service-for-mongodb)
     - [Explanation](#explanation-1)
-  - [Create Deployment YAML for NodeJS App](#create-deployment-yaml-for-nodejs-app)
+  - [3. Create Deployment YAML for NodeJS App](#3-create-deployment-yaml-for-nodejs-app)
     - [Explanation](#explanation-2)
-  - [Create App Service](#create-app-service)
+  - [4. Create App Service](#4-create-app-service)
     - [Explanation](#explanation-3)
-  - [Run and Verify the Deployment](#run-and-verify-the-deployment)
+  - [5. Run and Verify the Deployment](#5-run-and-verify-the-deployment)
     - [Blockers](#blockers)
-  - [Deletion Commands](#deletion-commands)
-  - [Creation Commands](#creation-commands)
-  - [Check They're There](#check-theyre-there)
-  - [Seeding the Database](#seeding-the-database)
+    - [Deletion Commands](#deletion-commands)
+    - [Creation Commands](#creation-commands)
+    - [Check They're There](#check-theyre-there)
+  - [6. Seeding the Database](#6-seeding-the-database)
     - [Copy the app folder](#copy-the-app-folder)
     - [Explanation](#explanation-4)
+- [Research Types of Autoscaling with K8s](#research-types-of-autoscaling-with-k8s)
+  - [What is Autoscaling?](#what-is-autoscaling)
+  - [Types of Autoscaling in Kubernetes](#types-of-autoscaling-in-kubernetes)
+    - [1. Horizontal Pod Autoscaling (HPA)](#1-horizontal-pod-autoscaling-hpa)
+    - [2. Vertical Pod Autoscaling (VPA)](#2-vertical-pod-autoscaling-vpa)
+    - [3. Cluster Autoscaling](#3-cluster-autoscaling)
+  - [Difference Between Vertical and Horizontal](#difference-between-vertical-and-horizontal)
+  - [Benefits of Autoscaling](#benefits-of-autoscaling)
+- [The key components of Kubernetes autoscaling](#the-key-components-of-kubernetes-autoscaling)
+  - [1. Resource Request](#1-resource-request)
+    - [Configuring the resource request](#configuring-the-resource-request)
+    - [Pod Disruption Budget](#pod-disruption-budget)
+  - [2. Pod Disruption Budget](#2-pod-disruption-budget)
+  - [3. Horizontal Pod Autoscaler](#3-horizontal-pod-autoscaler)
+  - [4. Cluster Autoscaler](#4-cluster-autoscaler)
+    - [Adding a node](#adding-a-node)
+    - [Removing a node](#removing-a-node)
 
 <br>
 
@@ -813,7 +830,7 @@ Guidance:
 
 <br>
 
-## Create Deployment for mongodb-deploy.yml
+## 1. Create Deployment for mongodb-deploy.yml
 Create a yaml file called [mongo-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/mongodb-deploy.yml). This YAML script defines a Kubernetes Deployment for a MongoDB instance. 
 
 ### Explanation
@@ -836,7 +853,7 @@ Create a yaml file called [mongo-deploy.yml](../k8s-yaml-definitions/local-nginx
 
 <br>
 
-## Create a Service for MongoDB
+## 2. Create a Service for MongoDB
 Create a yaml file called [mondobg-service](../k8s-yaml-definitions/local-nginx-deploy/mongodb-service.yml). This YAML script defines a Kubernetes Service for a MongoDB instance.
 
 ### Explanation
@@ -855,7 +872,7 @@ Create a yaml file called [mondobg-service](../k8s-yaml-definitions/local-nginx-
 
 <br>
 
-## Create Deployment YAML for NodeJS App
+## 3. Create Deployment YAML for NodeJS App
 Create a yaml file called [nodejs-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/nodejs-deploy.yml). This YAML script defines a Kubernetes Deployment for your Sparta application.
 
 ### Explanation
@@ -883,7 +900,7 @@ Create a yaml file called [nodejs-deploy.yml](../k8s-yaml-definitions/local-ngin
 
 <br>
 
-## Create App Service
+## 4. Create App Service
 Create a yaml file called [nodejs-service.yml](../k8s-yaml-definitions/local-nginx-deploy/nodejs-service.yml). This YAML script defines a Kubernetes Service for your Sparta application.
 
 ### Explanation
@@ -902,7 +919,7 @@ Create a yaml file called [nodejs-service.yml](../k8s-yaml-definitions/local-ngi
 
 <br>
 
-## Run and Verify the Deployment
+## 5. Run and Verify the Deployment
 Run these Kubernetes commands: 
 * `kubectl create -f mongodb-deploy.yml`
 * `kubectl create -f mongodb-service.yml`
@@ -917,29 +934,29 @@ Run these Kubernetes commands:
 * `kubectl get all`: to get all of the information in one. 
 
 ### Blockers
-* In your app-service.yml when connecting with the database you need to change the NodePort and it can't be the same port as the db-service.yml.
-* Make sure you create the db-deploy.yml and db-service.yml as the app needs something to connect to.
+* In your nodejs-service.yml (when connecting with the database), you need to change the NodePort and it can't be the same port as the mongodb-service.yml.
+* Make sure you create the mongodb-deploy.yml and mongodb-service.yml as the app needs something to connect to.
 
 <br>
 
-## Deletion Commands
+### Deletion Commands
 * `kubectl delete service mongodb-svc`
 * `kubectl delete service sparta-app-svc` 
 * `kubectl delete deployment mongodb-deployment`
 * `kubectl delete deployment sparta-app-deployment`
 
-## Creation Commands
+### Creation Commands
 * `kubectl create -f mongodb-deploy.yml`
 * `kubectl create -f mongodb-service.yml`
 * `kubectl create -f nodejs-deploy.yml`
 * `kubectl create -f nodejs-service.yml`
 
-## Check They're There
+### Check They're There
 * `kubectl get all`
 
 <br>
 
-## Seeding the Database
+## 6. Seeding the Database
 * This will need to be inputted after the environment variable within 'nodejs-deploy.yml' file.
 
 ### Copy the app folder
@@ -991,3 +1008,192 @@ Navigate to the [nodejs-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/n
   * `npm start`: Starts the application using npm.
 
 <br>
+
+# Research Types of Autoscaling with K8s
+
+## What is Autoscaling?
+* Autoscaling in Kubernetes is a way to **automatically adjust** the **number of running pods** or the **resources allocated to them** based on the **current demand**. 
+* This helps ensure that your application can handle varying loads efficiently without manual intervention.
+
+<br>
+
+## Types of Autoscaling in Kubernetes
+
+### 1. Horizontal Pod Autoscaling (HPA)
+* **What it does**: HPA automatically adjusts the number of pod replicas in a deployment, replica set, or stateful set based on observed CPU utilisation, memory usage, or custom metrics.
+* **How it works**: The HPA controller periodically checks the metrics and scales the number of pods up or down to match the desired target utilisation.
+* **Use case**: Ideal for applications with fluctuating workloads, such as web servers or APIs that experience varying traffic.
+
+### 2. Vertical Pod Autoscaling (VPA)
+* **What it does**: VPA automatically adjusts the CPU and memory requests and limits for containers in a pod.
+* **How it works**: VPA monitors the resource usage of pods and updates their resource requests and limits to better match the actual usage.
+* **Use case**: Useful for applications where the resource requirements change over time, such as batch processing jobs or data analytics workloads.
+
+### 3. Cluster Autoscaling
+* **What it does**: Cluster autoscaling adjusts the number of nodes in a Kubernetes cluster based on the resource requirements of the pods.
+* **How it works**: When there are not enough resources to schedule new pods, the cluster autoscaler adds more nodes. 
+  * Conversely, it removes nodes when they are underutilised.
+* **Use case**: Helps manage the overall capacity of the cluster, ensuring that there are enough resources to run all scheduled pods efficiently.
+
+![alt text](image.png)
+
+<br>
+
+## Difference Between Vertical and Horizontal
+
+| Feature                     | Horizontal Pod Autoscaling (HPA)                                      | Vertical Pod Autoscaling (VPA)                                      |
+|-----------------------------|-----------------------------------------------------------------------|---------------------------------------------------------------------|
+| **Scaling Direction**       | Scales the number of pods horizontally (increases or decreases the number of pod replicas) | Scales the resources allocated to each pod vertically (adjusts CPU and memory requests and limits) |
+| **Resource Management**     | Focuses on distributing the load across multiple pods                | Focuses on optimizing the resource allocation for individual pods   |
+| **Implementation**          | Requires setting up metrics to monitor and define target utilization thresholds | Requires setting up policies to monitor resource usage and adjust resource requests and limits |
+| **Use Case**                | Ideal for applications with fluctuating workloads, such as web servers or APIs that experience varying traffic | Useful for applications where the resource requirements change over time, such as batch processing jobs or data analytics workloads |
+| **Example**                 | Automatically adds more pod replicas to handle increased traffic for a web application | Increases memory limits for a data processing job to ensure it completes successfully |
+
+<br>
+
+## Benefits of Autoscaling
+* **Efficiency**: Automatically adjusts resources to match demand, reducing costs and improving performance.
+* **Reliability**: Ensures that applications remain responsive under varying loads.
+* **Scalability**: Easily handles growth in application usage without manual intervention.
+
+<br>
+
+# The key components of Kubernetes autoscaling
+* With this feature, you always have enough resources for the workload, and when a node becomes unhealthy it gets replaced without affecting the workload. 
+* You need to provide the scheduler with information about your Pods, so it can make the right decisions when scheduling them.
+
+The following components are needed to truly benefit from the autoscaling feature of Kubernetes;
+
+1. Resource Request
+2. Pod Disruption Budget
+3. Horizontal Pod Autoscaler
+4. Cluster Autoscaler
+
+![alt text](image-1.png)
+
+Source: https://timdepater.com/articles/kubernetes-autoscaling-components/
+
+## 1. Resource Request
+* When you configure a Pod, you specify how much of each resource it needs. 
+* The most common resources to specify are CPU and memory, but there are others.
+
+Per Pod you can specify;
+* The amount of CPU & memory you expect this Pod needs; the request.
+* The amount of CPU & memory you’re allowing the Pod to use; the limit.
+
+* The scheduler takes the resource request into account when determining which node has the resources available to run this Pod. 
+* When there is not a node available that would fit the Pod’s resource request, the Pod goes to the Pending state.
+* The Cluster Autoscaler will notice a Pod is pending because of a lack of resources and acts upon it by adding a new node.
+
+<br>
+
+### Configuring the resource request
+* The resource request is configured per Pod like this;
+
+```yaml
+resources:
+  requests:
+    cpu: "200m"
+    memory: "128Mi"
+```
+
+To come up with sane values for CPU & memory you can take the following into account;
+* `kubectl top pods -A` shows the actual CPU & memory usage of all Pods. 
+  * Be aware that this is a snapshot of that moment, it’s better to gather this information from a monitoring system that can show the trend over a longer period.
+* **CPU** is a resource that can overbooked, if the actual usage is higher than defined in the resource request then this could result in performance issues but the Pod wouldn’t get evicted because of it.
+* **Memory** can’t be overbooked and is reserved based on the resources request. 
+  * When a Pod is using more memory than configured and the node runs out of memory the scheduler could evict this Pod.
+
+### Pod Disruption Budget
+
+
+<br>
+
+## 2. Pod Disruption Budget
+* Pod disruption budgets allow you to configure the number of Pods that can be down simultaneously from voluntary disruptions. 
+* Voluntary disruptions are mostly triggered by the application owner or cluster administrator. 
+* This happens for example when a deployment is changed or a node is drained. 
+* The scheduler makes sure that when it’s evicting Pods, it keeps enough Pods running from the same deployment, statefulset or other controllers to don’t exceed the Pod disruption budget.
+
+> The cluster autoscaler is performing cluster administrator actions like draining a node to scale the cluster down. That’s why it’s important to configure these correctly when you want the cluster to autoscale and auto-heal.
+
+Example of a Pod Disruption Budget that allows for 1 Pod to be unavailable at the same time.
+```yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: myapp
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: myapp
+```
+
+<br>
+
+## 3. Horizontal Pod Autoscaler
+* With a Horizontal Pod Autoscaler, you specify which metrics decide if the number of replicas should scale up or down. 
+* You can use per-Pod resource metrics like CPU and memory or custom metrics like the number of requests/second, the Pod is receiving.
+
+Resource metrics can be defined as utilisation value, e.g.;
+
+```yaml
+metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 90
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 90
+```
+
+* When you define the metric as utilisation value it will be calculated as the percentage of the configured resource request.
+
+<br>
+
+## 4. Cluster Autoscaler
+* The Cluster Autoscaler is the component that adjusts the size of the node pool so that all Pods have a place to run and there are no unneeded nodes.
+* On most public cloud providers it’s part of the control plane which is managed by the provider. 
+  * For AWS that’s not the case, you need to deploy it yourself.
+
+### Adding a node
+* The Cluster Autoscaler will monitor the Pods and decide to add a node when a Pod needs to be scheduled and there aren’t sufficient resources for the resource request of that Pod.
+
+This works as follows;
+
+1. A new Pod is created
+2. The scheduler reads the resource request of the Pod and decides if there are enough resources on one of the nodes.
+3. If there are, the Pod is assigned to the node.
+4. If there aren’t, the Pod is set to the Pending state and can’t start.
+5. The Cluster Autoscaler will detect a Pod is not able to schedule due to a lack of resources.
+6. The Cluster Autoscaler will determine if the Pod could be scheduled when a new node is added (it could be due to (anti-) affinity rules that the Pod still can’t schedule on the newly created node).
+7. If so, the Cluster Autoscaler will add a new node to the cluster.
+8. The scheduler will detect the new node and schedule the Pod on the new node.
+
+> Note: the scheduler is not capable of moving Pods to different nodes to make room for the new Pod. This can sometimes lead to inefficient use of resources.
+
+<br>
+
+### Removing a node
+* The Cluster autoscaler will decide to remove a node when it has low utilisation and all of its important Pods can be moved to other nodes. 
+* There are a few reasons which prevent a Pod from being moved to a different node. 
+* To move a Pod it needs to be evicted and a new one needs to be started on a different node.
+
+Reasons why a Pod can’t be moved;
+* The Pod has a restrictive Pod Disruption Budget.
+* The Pod is part of the kube-system namespace and doesn’t have a Pod Disruption Budget, or it’s too restrictive.
+* The Pod isn’t backed by a controller object (so not created by deployment, replica set, job, statefulset, etc.).
+* The Pod has local storage and doesn’t have the safe-to-evict annotation.
+* The Pod can’t be moved due to various constraints (lack of resources, non-matching node selectors or (anti-) affinity, safe-to-evict annotation set to false, etc.)
+
+> The logs of the Cluster Autoscaler can tell you the actual reason, but when the Cluster Autoscaler is managed by the cloud provider you don’t always have access to that log.
+
+<br> 
+
