@@ -1035,7 +1035,7 @@ Navigate to the [nodejs-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/n
   * Conversely, it removes nodes when they are underutilised.
 * **Use case**: Helps manage the overall capacity of the cluster, ensuring that there are enough resources to run all scheduled pods efficiently.
 
-![alt text](image.png)
+![alt text](./kube-images/auto-diagram.png)
 
 <br>
 
@@ -1069,7 +1069,7 @@ The following components are needed to truly benefit from the autoscaling featur
 3. Horizontal Pod Autoscaler
 4. Cluster Autoscaler
 
-![alt text](image-1.png)
+![alt text](./kube-images/autoscaling.png)
 
 Source: https://timdepater.com/articles/kubernetes-autoscaling-components/
 
