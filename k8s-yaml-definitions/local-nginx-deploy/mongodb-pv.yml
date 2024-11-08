@@ -1,0 +1,13 @@
+# mongo-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-pv
+spec:
+  capacity:
+    storage: 100Mi # Adjust to an appropriate size
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete # Ensures PV is deleted when no longer used
+  hostPath:
+    path: /data/mongo # Using hostPath for local testing

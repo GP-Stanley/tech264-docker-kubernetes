@@ -70,6 +70,9 @@
   - [Deleting a Pod](#deleting-a-pod)
   - [Increase Number of Replicas](#increase-number-of-replicas)
   - [How to Delete Everything](#how-to-delete-everything)
+  - [ClusterIP v NodePort](#clusterip-v-nodeport)
+    - [ClusterIP](#clusterip)
+    - [NodePort](#nodeport)
 - [My Interpretation of Kubernetes Architecture](#my-interpretation-of-kubernetes-architecture)
 - [K8s deployment of NodeJS Sparta test app](#k8s-deployment-of-nodejs-sparta-test-app)
   - [1. Create Deployment for mongodb-deploy.yml](#1-create-deployment-for-mongodb-deployyml)
@@ -116,7 +119,31 @@
   - [What are the biggest challenges facing enterprises?](#what-are-the-biggest-challenges-facing-enterprises)
   - [How do these organisations handle Kubernetes?](#how-do-these-organisations-handle-kubernetes)
   - [Why/when would a business NOT want to use a microservices architecture?](#whywhen-would-a-business-not-want-to-use-a-microservices-architecture)
-- [](#)
+- [Manually Seeding: log in to a pod and seed the database](#manually-seeding-log-in-to-a-pod-and-seed-the-database)
+    - [Deletion Commands](#deletion-commands-1)
+    - [Creation Commands](#creation-commands-1)
+    - [Check They're There](#check-theyre-there-1)
+- [Persistent Volume (PV) and Persistent Volume Claim (PVC) for MongoDB](#persistent-volume-pv-and-persistent-volume-claim-pvc-for-mongodb)
+  - [Using PV and PVC for MongoDB](#using-pv-and-pvc-for-mongodb)
+- [Create 2-tier deployment with PV for database](#create-2-tier-deployment-with-pv-for-database)
+  - [Create a Persistent Volume (PV) for MongoDB](#create-a-persistent-volume-pv-for-mongodb)
+  - [Create a Persistent Volume Claim (PVC) for MongoDB](#create-a-persistent-volume-claim-pvc-for-mongodb)
+  - [Apply these configurations](#apply-these-configurations)
+  - [Configure the MongoDB Deployment with PVC](#configure-the-mongodb-deployment-with-pvc)
+  - [Apply the deployment](#apply-the-deployment)
+  - [Configure Node.js Deployment and Service](#configure-nodejs-deployment-and-service)
+  - [Apply the configurations](#apply-the-configurations)
+  - [Testing Persistent Data](#testing-persistent-data)
+    - [What does this output mean?](#what-does-this-output-mean)
+    - [Analysis of the output](#analysis-of-the-output)
+    - [Summary](#summary)
+  - [Delete MongoDB Pod/Deployment and Re-create:](#delete-mongodb-poddeployment-and-re-create)
+    - [Deletion Commands](#deletion-commands-2)
+    - [Creation Commands](#creation-commands-2)
+    - [Check They're There](#check-theyre-there-2)
+  - [Seed Manually](#seed-manually)
+  - [Delete MongoDB Pod/Deployment and Re-create](#delete-mongodb-poddeployment-and-re-create-1)
+  - [Check for Persistent Data](#check-for-persistent-data)
 
 <br>
 
@@ -823,6 +850,19 @@ It's best practise to delete things in a logical order: deploy, then service.
 
 <br> 
 
+## ClusterIP v NodePort
+### ClusterIP
+* **Internal Access**: ClusterIP exposes the service on an internal IP within the cluster. This means the service is only accessible from within the cluster.
+* **Use Case**: Ideal for internal services that do not need to be accessed from outside the cluster, such as databases or internal APIs.
+* **Security**: Provides better security as it limits access to within the cluster.
+
+### NodePort
+* **External Access**: NodePort exposes the service on a static port on each node's IP. This allows the service to be accessed from outside the cluster using `<NodeIP>:<NodePort>`.
+* **Use Case**: Suitable for services that need to be accessed from outside the cluster, such as web applications or APIs that external clients need to reach.
+* **Simplicity**: Easier to set up for external access without additional configurations.
+
+<br>
+
 # My Interpretation of Kubernetes Architecture
 
 ![alt text](./kube-images/image-15.png)
@@ -1325,4 +1365,333 @@ The main reason that makes one architecture more successful than the other: the 
 
 <br> 
 
-# 
+# Manually Seeding: log in to a pod and seed the database
+* For this task, I have commented out the command & args to seed the database in the nodejs-deploy.yml. 
+
+```yaml
+        env:
+        - name: DB_HOST
+          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
+#        command: ["/bin/sh", "-c"]
+#        args: ["cd ../app && node seeds/seed.js && npm start"]
+```
+
+* cd into 'local-nginx-deploy' and run all of your scripts in the correct order (db & app).
+
+Creation Commands
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f nodejs-service.yml`
+
+<br>
+
+Goal: log in to a pod and seed the database.
+
+* ` kubectl get all` to see your pods.
+* Copy this: 'sparta-app-deployment-b9c5777d7-brl8j'
+
+![alt text](image.png)
+
+* `kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
+
+![alt text](image-1.png)
+
+* Fix with the 'winpty' command. 
+  * `winpty kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
+
+![alt text](image-2.png)
+
+Why are we in the app folder?
+* Because we set the working directory in the dockerfile. 
+
+Now what?
+* Check your env variable is present.
+  * `printenv DB_HOST` or `echo $DB_HOST`
+
+![alt text](image-3.png)
+
+* Now seed the database.
+  * `node seeds/seed.js`
+
+![alt text](image-4.png)
+
+* Refresh your terminal.
+  * http://localhost:30003/posts
+
+![alt text](image-5.png)
+
+* Exit out.
+  * `exit`
+
+<br>
+
+### Deletion Commands
+* `kubectl delete service mongodb-svc`
+* `kubectl delete service sparta-app-svc` 
+* `kubectl delete deployment mongodb-deployment`
+* `kubectl delete deployment sparta-app-deployment`
+
+### Creation Commands
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f nodejs-service.yml`
+
+### Check They're There
+* `kubectl get all`
+
+<br> 
+
+# Persistent Volume (PV) and Persistent Volume Claim (PVC) for MongoDB
+* By using PV and PVC, you ensure that your MongoDB **data persists** even if the MongoDB pod is **deleted** or **rescheduled**. 
+* This setup provides a reliable way to **manage storage for stateful applications** like databases in Kubernetes
+
+**Persistent Volume** (PV)
+* A Persistent Volume (PV) in Kubernetes is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes. 
+* It is a resource in the cluster just like a node is a cluster resource. 
+* PVs are volume plugins like Volumes, but they have a lifecycle independent of any individual Pod that uses the PV.
+
+**Persistent Volume Claim** (PVC)
+* A Persistent Volume Claim (PVC) is a request for storage by a user. 
+* It is similar to a Pod. 
+* Pods consume node resources, and PVCs consume PV resources. 
+* PVCs can request specific size and access modes (e.g., they can be mounted ReadWriteOnce, ReadOnlyMany, ReadWriteMany, or ReadWriteOncePod).
+
+## Using PV and PVC for MongoDB
+When deploying MongoDB in Kubernetes, you can use PV and PVC to ensure that your MongoDB data is stored persistently.
+
+1. Create a Persistent Volume (PV):
+   * Define a PV that specifies the storage capacity, access modes, and storage backend (e.g., NFS, iSCSI, cloud storage).
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /data/mongo
+```
+
+2. Create a Persistent Volume Claim (PVC):
+   * Define a PVC that requests storage from the PV.
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+3. Use the PVC in the MongoDB Deployment:
+   * Reference the PVC in the MongoDB deployment to mount the persistent storage.
+
+For example:
+```yaml
+volumes: 
+- name: mongo-storage 
+  persistentVolumeClaim: 
+    claimName: mongo-pvc
+```
+
+<br>
+
+# Create 2-tier deployment with PV for database
+Task:
+
+**Pre-requisite**: You have the NodeJS app and MongoDB database working on Kubernetes, but you are not using a PV (persistent volume) yet for the database.
+
+* Create mongo-node deploy and volume (PV and PVC).
+* Be careful you don't allocate too much storage for the PV.
+* Remember to remove PV at the end (otherwise they will just stay there).
+
+Check them using these commands:
+* `kubectl get pv`
+* `kubectl get pvc`
+
+You will know you are successful if you:
+* Delete the database deployment or the database pod
+* Re-create the deployment or pod
+* The same data displays on the /posts page.
+
+Diagram (20min) your Kubernetes architecture with the PV and PVC
+* Have logical notes/dot points on your diagram, labels
+* Then send the link for to your diagram
+
+Links to help:
+* https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+
+<br>
+
+## Create a Persistent Volume (PV) for MongoDB
+This step ensures that the database has persistent storage that remains even if the MongoDB pod is deleted.
+
+Persistent Volume (PV) Definition (YAML)
+
+```yaml
+```
+
+<br>
+
+## Create a Persistent Volume Claim (PVC) for MongoDB
+This step ensures that the database has persistent storage that remains even if the MongoDB pod is deleted.
+
+Persistent Volume Claim (PVC) Definition (YAML)
+
+```yaml
+```
+
+## Apply these configurations
+* `kubectl apply -f mongodb-pv.yml`
+* `kubectl apply -f mongodb-pvc.yml`
+
+<br>
+
+## Configure the MongoDB Deployment with PVC
+In the Mongodb-deploy.yml, reference the PVC to ensure data is stored persistently.
+
+```yaml
+        volumeMounts:
+        - name: mongo-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-storage
+        persistentVolumeClaim:
+          claimName: mongodb-pvc
+```
+
+## Apply the deployment
+* `kubectl apply -f mongodb-deploy.yml`
+
+<br>
+
+## Configure Node.js Deployment and Service
+The nodejs-deploy.yml and nodejs-service.yml need to connect to the MongoDB service within the same Kubernetes cluster.
+
+## Apply the configurations
+* `kubectl apply -f nodejs-deploy.yml`
+* `kubectl apply -f nodejs-service.yml`
+
+<br>
+
+## Testing Persistent Data
+1. Verify the PV and PVC Status.
+   * `kubectl get pv`
+   * `kubectl get pvc`
+
+![alt text](image-6.png)
+
+### What does this output mean?
+* **mongodb-pv**: This PV has a capacity of 100Mi, is set to be accessed in ReadWriteOnce (RWO) mode, and has a reclaim policy of Delete. 
+* Its status is Available, meaning it is not currently bound to any PVC.
+
+**pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0**: This PV has the same capacity and access mode as mongodb-pv, but its status is Bound, meaning it is currently bound to a PVC named mongodb-pvc in the default namespace.
+
+**mongodb-pvc**: This PVC is in the Bound status, meaning it is successfully bound to the PV named pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0. 
+It requests 100Mi of storage with ReadWriteOnce (RWO) access mode and uses the hostpath storage class.
+
+### Analysis of the output
+1. Persistent Volume (PV) Status
+   * The PV named mongodb-pv has a capacity of 100Mi and an access mode of RWO (ReadWriteOnce)
+   * The reclaim policy is set to Delete, which means the PV will be automatically deleted when it is no longer bound to a PVC
+   * The STATUS is "Available", meaning it’s ready for use
+   * Another entry shows the PV is "Bound" to pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0, indicating that it’s connected to a PVC, which is exactly what you wanted.
+
+2. Persistent Volume Claim (PVC) Status:
+   * The PVC named mongodb-pvc shows a status of "Bound", which confirms it has successfully claimed the PV
+   * It is bound to the PV pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0, confirming a connection between the PVC and the PV.
+
+### Summary
+* **mongodb-pv** is a Persistent Volume that is currently available and not bound to any PVC.
+* **pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0** is a Persistent Volume that is bound to the PVC named mongodb-pvc.
+* **mongodb-pvc** is a Persistent Volume Claim that is successfully bound to the PV pvc-cc800919-bfbd-462e-a449-de2cd70ce2d0.
+
+This setup ensures that your MongoDB data is stored persistently, even if the MongoDB pod is deleted or rescheduled.
+
+<br>
+
+## Delete MongoDB Pod/Deployment and Re-create:
+* `kubectl delete deployment mongo`
+* `kubectl apply -f mongodb-deploy.yml`
+
+### Deletion Commands
+* `kubectl delete service mongodb-svc`
+* `kubectl delete service sparta-app-svc` 
+* `kubectl delete deployment mongodb-deployment`
+* `kubectl delete deployment sparta-app-deployment`
+
+### Creation Commands
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f nodejs-service.yml`
+
+### Check They're There
+* `kubectl get all`
+* `kubectl get pv`
+* `kubectl get pvc`
+
+<br> 
+
+## Seed Manually 
+Goal: log in to a pod and seed the database.
+
+* ` kubectl get all` to see your pods.
+* Copy this: 'sparta-app-deployment-b9c5777d7-662qj'
+
+![alt text](image-7.png)
+
+* With the 'winpty' command. 
+  * `winpty kubectl exec -it sparta-app-deployment-b9c5777d7-662qj -- sh`
+
+Why are we in the app folder?
+* Because we set the working directory in the dockerfile. 
+
+Now what?
+* Check your env variable is present.
+  * `printenv DB_HOST` or `echo $DB_HOST`
+
+* Now seed the database.
+  * `node seeds/seed.js`
+
+![alt text](image-8.png)
+
+* Refresh your terminal.
+  * http://localhost:30003/posts
+
+![alt text](image-9.png)
+
+* Exit out.
+  * `exit`
+
+<br>
+
+## Delete MongoDB Pod/Deployment and Re-create
+* This is to check the replicaset will duplicate what you've deleted.
+
+```yaml
+kubectl delete deployment mongodb-deployment
+kubectl apply -f mongodb-deploy.yml
+```
+
+## Check for Persistent Data
+* Access your Node.js app and check if previously created entries (e.g., /posts page data) are still available. 
+* This will confirm if the Persistent Volume setup is working correctly.
+
+![alt text](image-10.png)
+
+![alt text](image-11.png)
+
+<br> 
