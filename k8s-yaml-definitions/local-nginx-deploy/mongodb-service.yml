@@ -6,9 +6,10 @@ metadata:
   namespace: default
 spec:
   ports:
-  - nodePort: 30002
-    port: 27017
-    targetPort: 27017
+  - nodePort: 30002   # The port on each node where the service is exposed (worker node), (exposed on the outside of the cluster)
+#    - protocol: TCP # this will replace the nodePort above if you use a ClusterIp below
+    port: 27017   # The port that the service listens on (inside of the cluster)
+    targetPort: 27017   # The port on the pod that the service forwards traffic to
   selector:
-    app: mongodb # Label to match service to deployment
-  type: NodePort
+    app: mongodb  # Label to match service to deployment
+  type: NodePort    # can use 'ClusterIp' for just internal access

@@ -6,9 +6,9 @@ metadata:
   namespace: default
 spec:
   ports:
-  - nodePort: 30003
-    port: 80
-    targetPort: 3000
+  - nodePort: 30003   # The port on each node where the service is exposed
+    port: 80    # The port that the service listens on.
+    targetPort: 3000    # The port on the pod that the service forwards traffic to.
   selector:
     app: sparta-app # Label to match service to deployment
   type: NodePort

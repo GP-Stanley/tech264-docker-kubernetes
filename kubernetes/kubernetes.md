@@ -78,6 +78,8 @@
     - [Explanation](#explanation-1)
   - [3. Create Deployment YAML for NodeJS App](#3-create-deployment-yaml-for-nodejs-app)
     - [Explanation](#explanation-2)
+    - [Alternative way of seeding - untested in my scripts](#alternative-way-of-seeding---untested-in-my-scripts)
+    - [Manual Seeding: Using a Pod - untested](#manual-seeding-using-a-pod---untested)
   - [4. Create App Service](#4-create-app-service)
     - [Explanation](#explanation-3)
   - [5. Run and Verify the Deployment](#5-run-and-verify-the-deployment)
@@ -105,6 +107,16 @@
   - [4. Cluster Autoscaler](#4-cluster-autoscaler)
     - [Adding a node](#adding-a-node)
     - [Removing a node](#removing-a-node)
+- [Upcoming Assessment Topics](#upcoming-assessment-topics)
+  - [What are the implecations of a pod being ephemeral?](#what-are-the-implecations-of-a-pod-being-ephemeral)
+  - [What is a maintained image and why should we use them?](#what-is-a-maintained-image-and-why-should-we-use-them)
+  - [What's the difference between DevOps, SRE and platform Engineering?](#whats-the-difference-between-devops-sre-and-platform-engineering)
+    - [Table of Differences](#table-of-differences)
+  - [How Secure are Kubernetes Secrets?](#how-secure-are-kubernetes-secrets)
+  - [What are the biggest challenges facing enterprises?](#what-are-the-biggest-challenges-facing-enterprises)
+  - [How do these organisations handle Kubernetes?](#how-do-these-organisations-handle-kubernetes)
+  - [Why/when would a business NOT want to use a microservices architecture?](#whywhen-would-a-business-not-want-to-use-a-microservices-architecture)
+- [](#)
 
 <br>
 
@@ -862,11 +874,11 @@ Create a yaml file called [mondobg-service](../k8s-yaml-definitions/local-nginx-
 3. **metadata**: Provides metadata for the service, including the name of the service (`mongodb-svc`) and the namespace (`default`).
 4. **spec**: Defines the specification for the service, including the following:
    * **ports**: Specifies the ports to expose. In this case:
-     * **nodePort**: `30002` - The port on each node where the service is exposed.
-     * **port**: `27017` - The port that the service listens on.
+     * **nodePort**: `30002` - The port on each node where the service is exposed (worker node), (exposed on the outside of the cluster).
+     * **port**: `27017` - The port that the service listens on (inside of the cluster).
      * **targetPort**: `27017` - The port on the pod that the service forwards traffic to.
    * **selector**: Specifies the label selector to match the pods managed by this service. In this case, it looks for pods with the label `app: mongodb`.
-   * **type**: Specifies the type of service. In this case, it's a `NodePort` service, which exposes the service on a static port on each node's IP.
+   * **type**: Specifies the type of service. In this case, it's a `NodePort` service, which exposes the service on a static port on each node's IP (can use clusterip for just internal access).
 
 > This script creates a Kubernetes Service that exposes the MongoDB instance running in the `default` namespace. The service listens on port `27017` and is accessible via the node port `30002`. The service forwards traffic to pods with the label `app: mongodb`.
 
@@ -900,6 +912,46 @@ Create a yaml file called [nodejs-deploy.yml](../k8s-yaml-definitions/local-ngin
 
 <br>
 
+### Alternative way of seeding - untested in my scripts
+```yaml
+command: ["/bin/sh", "-c"]
+args: ["node seeds/seed.js && npm start app.js"]
+```
+
+### Manual Seeding: Using a Pod - untested
+* Run a one-time Pod to seed the database.
+
+1. Create a pod. Here's an example YAML file for a Pod that seeds a MongoDB database:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: seed-pod
+spec:
+  containers:
+  - name: seed-container
+    image: mongo:latest
+    command: ["/bin/sh", "-c"]
+    args: ["mongo mongodb://mongodb-svc.default.svc.cluster.local:27017/mydb --eval 'db.myCollection.insert({name: \"example\"})'"]
+  restartPolicy: Never
+```
+
+2. Run the pod. 
+   * `kubectl apply -f seed-pod.yaml`
+
+3. Verify the pod.
+   * Check the status of the Pod to ensure it completed successfully.
+     * `kubectl get pods`
+   * View the logs of the Pod to see the output of the seeding command.
+     * `kubectl logs seed-pod`
+
+4. Clean up.
+   * Once the Pod has completed successfully, you can delete it to clean up resources.
+     * `kubectl delete pod seed-pod`
+
+<br>
+
 ## 4. Create App Service
 Create a yaml file called [nodejs-service.yml](../k8s-yaml-definitions/local-nginx-deploy/nodejs-service.yml). This YAML script defines a Kubernetes Service for your Sparta application.
 
@@ -909,8 +961,8 @@ Create a yaml file called [nodejs-service.yml](../k8s-yaml-definitions/local-ngi
 3. **metadata**: Provides metadata for the service, including the name of the service (`sparta-app-svc`) and the namespace (`default`).
 4. **spec**: Defines the specification for the service, including the following:
    * **ports**: Specifies the ports to expose. In this case:
-     * **nodePort**: `30003` - The port on each node where the service is exposed.
-     * **port**: `80` - The port that the service listens on.
+     * **nodePort**: `30003` - The port on each node where the service is exposed (worker node), (exposed on the outside of the cluster).
+     * **port**: `80` - The port that the service listens on (inside of the cluster).
      * **targetPort**: `3000` - The port on the pod that the service forwards traffic to.
    * **selector**: Specifies the label selector to match the pods managed by this service. In this case, it looks for pods with the label `app: sparta-app`.
    * **type**: Specifies the type of service. In this case, it's a `NodePort` service, which exposes the service on a static port on each node's IP.
@@ -1080,7 +1132,6 @@ Source: https://timdepater.com/articles/kubernetes-autoscaling-components/
 Per Pod you can specify;
 * The amount of CPU & memory you expect this Pod needs; the request.
 * The amount of CPU & memory you’re allowing the Pod to use; the limit.
-
 * The scheduler takes the resource request into account when determining which node has the resources available to run this Pod. 
 * When there is not a node available that would fit the Pod’s resource request, the Pod goes to the Pending state.
 * The Cluster Autoscaler will notice a Pod is pending because of a lack of resources and acts upon it by adding a new node.
@@ -1197,3 +1248,81 @@ Reasons why a Pod can’t be moved;
 
 <br> 
 
+# Upcoming Assessment Topics
+## What are the implecations of a pod being ephemeral?
+* persistent volumes can solve the issue of losing data.
+
+## What is a maintained image and why should we use them?
+* It's a container image originated from trusted sources, like docker.
+* They have regular updates, better security (receive regular security patches and updates).
+
+## What's the difference between DevOps, SRE and platform Engineering?
+**DevOps**
+* Focuses on collaboration between development and operations. 
+* Delivering code quicker to end users. 
+* Help the developers to be able to deliver their code faster for the end users so it can create value for the business. 
+  * Make a developers life easier. 
+* Provide consistent environments for the developers to use. 
+
+**SRE** (Site Reliability Engineering)
+* Focuses on reliability and uptime of services: aka, anything they need to do to keep things up and running. 
+* Makes sure that the changes that are applied don't break the infrastructure so the application is always available.
+  * They want the highest up-time possible. 
+
+**Platform Engineering**
+* Building and maintaining internal platforms.
+* Focuses on creating and managing the infrastructure that supports development teams.
+* Developing a platform/ecosystem where developers can access the tools and resources they need to perform their tasks efficiently.
+
+<br>
+
+### Table of Differences
+
+| **Aspect**          | **DevOps**                                      | **SRE (Site Reliability Engineering)**                  | **Platform Engineering**                              |
+|---------------------|-------------------------------------------------|--------------------------------------------------------|------------------------------------------------------|
+| **Focus**           | Collaboration between development and operations | Reliability and uptime of services                      | Building and maintaining internal platforms           |
+| **Key Activities**  | CI/CD, automation, monitoring, and collaboration | Monitoring, incident response, and automation           | Creating tools and infrastructure for developers      |
+| **Goal**            | Faster and more reliable software delivery       | Ensuring services are reliable and scalable             | Improving developer productivity and efficiency       |
+| **Approach**        | Cultural shift and practices                     | Applying software engineering to operations problems    | Providing reusable components and services            |
+
+<br>
+
+## How Secure are Kubernetes Secrets?
+* It's encoded, not encrypted.
+* Anyone with access to the namespace, where those secrets are stored, can access those secrets. 
+
+What would be better for production?
+* Avoid storing sensitive info in certain places by assigning particular roles. 
+* Azure Key-Vault, KMS (AWS): Manage secrets with a key vault.
+
+## What are the biggest challenges facing enterprises?
+* Vendor lock-in.
+  * Enterprises often become dependent on a single vendor for products and services, making it difficult and costly to switch providers.
+  * Organisations can get stuck with their data and how its structure because theyve chosen to use a managed service. 
+  * Vendors will store this data in a particular format, if they wat to change this, it's a huge challenge because it's stored in a particular way. 
+* Cost.
+* Keeping Data Secure.
+  * They may want to move their data to the cloud, but they're worried about keeping it secure. 
+  * They want to physically controll access to where their hardware is stored.
+  * They may not want to migrate the entire application onto the cloud because they may want to keep parts of those applications on-prem. 
+    * This results in a **hybrid** cloud solution.
+    * More complicated and requires more expertise. 
+
+## How do these organisations handle Kubernetes?
+* If they want to use Kubernetes, they have to abstract (seperate) the complexities of Kubernets and match them with certain developers. 
+* Challenges: higher complexities, more expertise, dedicated kubernetes team.
+
+## Why/when would a business NOT want to use a microservices architecture?
+* slow/low-runtime.
+* Small, simple application: fine to use a monolith. 
+* Early stages of development.
+* A business is not ready with having expertise available to handle the complexity of a microservices architecture.
+* Some organisations have a cult culture to develop monoliths. 
+* An application that needs to use every part of the database.
+  * The challenge of breaking this aplpication up might not be worth the change. Too big a challenge. 
+
+The main reason that makes one architecture more successful than the other: the culture of the organisation. 
+
+<br> 
+
+# 
