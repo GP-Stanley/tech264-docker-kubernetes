@@ -93,6 +93,7 @@
   - [6. Seeding the Database](#6-seeding-the-database)
     - [Copy the app folder](#copy-the-app-folder)
     - [Explanation](#explanation-4)
+- [Manually Seeding: log in to a pod and seed the database](#manually-seeding-log-in-to-a-pod-and-seed-the-database)
 - [Upcoming Assessment Topics](#upcoming-assessment-topics)
   - [What are the implecations of a pod being ephemeral?](#what-are-the-implecations-of-a-pod-being-ephemeral)
   - [What is a maintained image and why should we use them?](#what-is-a-maintained-image-and-why-should-we-use-them)
@@ -102,7 +103,6 @@
   - [What are the biggest challenges facing enterprises?](#what-are-the-biggest-challenges-facing-enterprises)
   - [How do these organisations handle Kubernetes?](#how-do-these-organisations-handle-kubernetes)
   - [Why/when would a business NOT want to use a microservices architecture?](#whywhen-would-a-business-not-want-to-use-a-microservices-architecture)
-- [Manually Seeding: log in to a pod and seed the database](#manually-seeding-log-in-to-a-pod-and-seed-the-database)
     - [Deletion Commands](#deletion-commands-1)
     - [Creation Commands](#creation-commands-1)
     - [Check They're There](#check-theyre-there-1)
@@ -1117,6 +1117,67 @@ Navigate to the [nodejs-deploy.yml](../k8s-yaml-definitions/local-nginx-deploy/n
 
 <br> 
 
+# Manually Seeding: log in to a pod and seed the database
+* For this task, I have commented out the command & args to seed the database in the nodejs-deploy.yml. 
+
+```yaml
+        env:
+        - name: DB_HOST
+          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
+#        command: ["/bin/sh", "-c"]
+#        args: ["cd ../app && node seeds/seed.js && npm start"]
+```
+
+* cd into 'local-nginx-deploy' and run all of your scripts in the correct order (db & app).
+
+Creation Commands
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f nodejs-service.yml`
+
+<br>
+
+Goal: log in to a pod and seed the database.
+
+* ` kubectl get all` to see your pods.
+* Copy this: 'sparta-app-deployment-b9c5777d7-brl8j'
+
+![alt text](./kube-images/1.png)
+
+* `kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
+
+![alt text](./kube-images/2.png)
+
+* Fix with the 'winpty' command. 
+  * `winpty kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
+
+![alt text](./kube-images/3.png)
+
+Why are we in the app folder?
+* Because we set the working directory in the dockerfile. 
+
+Now what?
+* Check your env variable is present.
+  * `printenv DB_HOST` or `echo $DB_HOST`
+
+![alt text](./kube-images/4.png)
+
+* Now seed the database.
+  * `node seeds/seed.js`
+
+![alt text](./kube-images/5.png)
+
+* Refresh your terminal.
+  * http://localhost:30003/posts
+
+![alt text](./kube-images/6.png)
+
+* Exit out.
+  * `exit`
+
+<br>
+
 # Upcoming Assessment Topics
 ## What are the implecations of a pod being ephemeral?
 * persistent volumes can solve the issue of losing data.
@@ -1193,67 +1254,6 @@ What would be better for production?
 The main reason that makes one architecture more successful than the other: the culture of the organisation. 
 
 <br> 
-
-# Manually Seeding: log in to a pod and seed the database
-* For this task, I have commented out the command & args to seed the database in the nodejs-deploy.yml. 
-
-```yaml
-        env:
-        - name: DB_HOST
-          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
-#        command: ["/bin/sh", "-c"]
-#        args: ["cd ../app && node seeds/seed.js && npm start"]
-```
-
-* cd into 'local-nginx-deploy' and run all of your scripts in the correct order (db & app).
-
-Creation Commands
-* `kubectl create -f mongodb-deploy.yml`
-* `kubectl create -f mongodb-service.yml`
-* `kubectl create -f nodejs-deploy.yml`
-* `kubectl create -f nodejs-service.yml`
-
-<br>
-
-Goal: log in to a pod and seed the database.
-
-* ` kubectl get all` to see your pods.
-* Copy this: 'sparta-app-deployment-b9c5777d7-brl8j'
-
-![alt text](./kube-images/1.png)
-
-* `kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
-
-![alt text](./kube-images/2.png)
-
-* Fix with the 'winpty' command. 
-  * `winpty kubectl exec -it sparta-app-deployment-b9c5777d7-brl8j -- sh`
-
-![alt text](./kube-images/3.png)
-
-Why are we in the app folder?
-* Because we set the working directory in the dockerfile. 
-
-Now what?
-* Check your env variable is present.
-  * `printenv DB_HOST` or `echo $DB_HOST`
-
-![alt text](./kube-images/4.png)
-
-* Now seed the database.
-  * `node seeds/seed.js`
-
-![alt text](./kube-images/5.png)
-
-* Refresh your terminal.
-  * http://localhost:30003/posts
-
-![alt text](./kube-images/6.png)
-
-* Exit out.
-  * `exit`
-
-<br>
 
 ### Deletion Commands
 * `kubectl delete service mongodb-svc`
