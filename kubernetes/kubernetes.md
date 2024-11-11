@@ -122,6 +122,7 @@
     - [1. Horizontal Pod Autoscaling (HPA)](#1-horizontal-pod-autoscaling-hpa)
     - [2. Vertical Pod Autoscaling (VPA)](#2-vertical-pod-autoscaling-vpa)
     - [3. Cluster Autoscaling](#3-cluster-autoscaling)
+    - [4. Kubernetes Event-Driven Autoscaling (KEDA)](#4-kubernetes-event-driven-autoscaling-keda)
   - [Difference Between Vertical and Horizontal](#difference-between-vertical-and-horizontal)
   - [Benefits of Autoscaling](#benefits-of-autoscaling)
 - [The key components of Kubernetes autoscaling](#the-key-components-of-kubernetes-autoscaling)
@@ -1443,6 +1444,20 @@ kubectl apply -f mongodb-deploy.yml
 * **How it works**: When there are not enough resources to schedule new pods, the cluster autoscaler adds more nodes. 
   * Conversely, it removes nodes when they are underutilised.
 * **Use case**: Helps manage the overall capacity of the cluster, ensuring that there are enough resources to run all scheduled pods efficiently.
+
+### 4. Kubernetes Event-Driven Autoscaling (KEDA)
+* **What it does**: KEDA allows you to scale your Kubernetes workloads based on external events. It extends the capabilities of Kubernetes autoscaling by enabling you to scale applications based on custom metrics and external event sources, such as message queues, databases, or cloud services.
+
+* **How it works**:
+  * **Event-Driven Scaling**: KEDA can scale your applications based on events from various sources, such as Azure Event Hubs, Kafka, RabbitMQ, and more.
+  * **Custom Metrics**: KEDA allows you to define custom metrics for scaling, enabling you to scale your applications based on specific business requirements.
+  * **Integration with HPA**: KEDA works alongside the Horizontal Pod Autoscaler (HPA) to provide seamless scaling based on both resource utilization and external events.
+  * **Scalers**: KEDA supports a wide range of scalers, which are responsible for connecting to external event sources and providing metrics for scaling. Some popular scalers include Azure Monitor, AWS CloudWatch, Prometheus, and more.
+
+* **Use case**: KEDA is particularly useful for applications that experience variable workloads and need to respond quickly to changes in demand. For example:
+  * **E-commerce Platforms**: Scale up during peak shopping times and scale down during off-peak hours.
+  * **IoT Applications**: Handle bursts of data from IoT devices by scaling up processing capabilities when needed.
+  * **Event-Driven Architectures**: Automatically scale based on events from message queues or other event sources, ensuring that your application can handle varying loads efficiently.
 
 ![alt text](./kube-images/auto-diagram.png)
 
