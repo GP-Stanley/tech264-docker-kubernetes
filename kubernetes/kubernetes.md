@@ -1799,21 +1799,29 @@ kubectl patch deployment metrics-server -n kube-system --type='json' -p='[
   }
 ]'
 ```
+* This command adds the `--kubelet-insecure-tls` argument to the metrics server container.
+* **Purpose**
+  * The --kubelet-insecure-tls flag tells the metrics server to skip the verification of the kubelet's TLS certificates. 
+  * This can be useful in environments where the kubelet is using self-signed certificates or certificates that are not signed by a trusted certificate authority (CA).
+* You can do this manually by following the path: "/spec/template/spec/containers/0/args/-" and manually inserting "--kubelet-insecure-tls" into the right area. 
+* Be careful of syntaxes! Make sure you're manually using spaces and NOT tabs. 
 
-3. Verify the Metrics Server Deployment
+<br>
+
+1. Verify the Metrics Server Deployment
    * After patching, check the status of the Metrics Server deployment again:
 ```yaml
 kubectl get deployment -n kube-system metrics-server
 ```
 
-4. Check Metrics Availability
+1. Check Metrics Availability
    * Once the Metrics Server is running, verify that metrics are available:
 ```yaml
 kubectl top nodes
 kubectl top pods
 ```
 
-5. Monitor HPA
+1. Monitor HPA
    * After ensuring the Metrics Server is running and metrics are available, monitor the HPA to see if it starts reporting CPU metrics correctly:
 ```yaml
 kubectl get hpa

@@ -11,4 +11,4 @@ spec:
     targetPort: 3000  # The port on the pod that the service forwards traffic to.
   selector:
     app: sparta-app   # Label to match service to deployment
-  type: NodePort  # Used to be NodePort, changed for external IP for HPA & broke it. Needs testing.
+  type: NodePort  

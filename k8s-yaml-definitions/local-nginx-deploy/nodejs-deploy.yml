@@ -8,7 +8,7 @@ spec:
       app: sparta-app # Look for this label/tag to match k8 service
 
   # Create a ReplicaSet with instances/pods
-  replicas: 3
+  replicas: 3   # In the past, you had to set replicas to 1 and allow the auto-scaller to control it. UNTESTED.
   template:
     metadata:
       labels:
