@@ -149,6 +149,26 @@
     - [Deletion Commands](#deletion-commands-2)
     - [Creation Commands](#creation-commands-2)
     - [Check They're There](#check-theyre-there-2)
+- [Use MetalLB as a load balancer for the Sparta app deployment](#use-metallb-as-a-load-balancer-for-the-sparta-app-deployment)
+  - [Goal](#goal)
+  - [MetalLB Requirements](#metallb-requirements)
+- [Install MetalLB by Manifest](#install-metallb-by-manifest)
+    - [What This Command Does:](#what-this-command-does)
+  - [Configure MetalLB in L2 mode](#configure-metallb-in-l2-mode)
+    - [Finding Your IP Range](#finding-your-ip-range)
+    - [Calculating the IP Range](#calculating-the-ip-range)
+  - [Configure MetalLB \& Apply](#configure-metallb--apply)
+    - [Explanation](#explanation-5)
+  - [Apply your PV and PVC file](#apply-your-pv-and-pvc-file)
+  - [Deploy the Database](#deploy-the-database)
+  - [Deply Sparta App](#deply-sparta-app)
+  - [Enable Autoscaling (HPA)](#enable-autoscaling-hpa)
+  - [Verify the Deployment](#verify-the-deployment)
+  - [Access Service](#access-service)
+- [Delete \& Create](#delete--create-1)
+    - [Delete all at once:](#delete-all-at-once-1)
+    - [Create all at once](#create-all-at-once)
+    - [Check They're There](#check-theyre-there-3)
 
 <br>
 
@@ -1858,3 +1878,225 @@ kubectl get hpa
 * `kubectl get all`
 * `kubectl get pv`
 * `kubectl get pvc`
+
+<br>
+
+# Use MetalLB as a load balancer for the Sparta app deployment
+Task:
+MetalLB is a load-balancer implementation for bare-metal Kubernetes clusters, which can be used in a local setup.
+
+* Aim: Create a working local deployment of the Sparta test app with database which uses MetalLB as the load balancer.
+* Try to use the latest version of MetalLB
+
+Include:
+* PV and PVC for the database
+* Autoscaling (HPA) for the app
+
+Documentation to help: https://metallb.universe.tf/
+
+> Warning! Be careful of just using ChatGPT to help you, as it will likely give you outdated steps.
+
+Advice:
+  * Keep it simple and use L2 mode and advertising rather BGP
+* Part of your document should include:
+  * Difference between the NodePort and LoadBalancer service, especially the purpose of ports specified in the YAML definition file
+  * How to clean-up your deployment, and uninstall Metal LB
+
+<br>
+
+## Goal
+* Deploy the Sparta test application along with a database on a local Kubernetes cluster, utilising MetalLB in Layer 2 (L2) mode as a LoadBalancer. 
+* This setup will provide:
+  * a public IP address for external access to the Sparta app.
+  * create Persistent Volume (PV) and Persistent Volume Claim (PVC) for the database.
+  * configure Horizontal Pod Autoscaling (HPA) for the Sparta app to manage traffic fluctuations.
+
+<br>
+
+## MetalLB Requirements
+MetalLB requires the following to function:
+* A **Kubernetes cluster**, running Kubernetes 1.13.0 or later, that does not already have network load-balancing functionality.
+* A **cluster network** configuration that can **coexist with MetalLB**.
+* Some **IPv4 addresses** for MetalLB to hand out.
+* When using the L2 operating mode, **traffic on port 7946** (TCP & UDP, other port can be configured) **must be allowed between nodes**, as required by memberlist.
+
+<br>
+
+# Install MetalLB by Manifest
+* MetalLB allows Kubernetes to expose services with a LoadBalancer IP for clusters without native cloud integration. 
+* In this setup, we'll use Layer 2 (L2) mode, where MetalLB announces IP addresses directly to the local network.
+* Make sure Docker Besktop is running Kubernetes.
+
+![alt text](./kube-images/b.png)
+
+* Open a gitbash window and `docker login` to cover your back.
+* In a gitbash window, install MetalLB.
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
+```
+
+![alt text](./kube-images/
+* Apply the manifest:
+  * `kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml`
+
+![alt text](./kube-images/c.png)
+
+### What This Command Does:
+Fetches the Manifest:
+* The command downloads the MetalLB manifest file from the specified URL.
+
+Applies the Manifest:
+* The command applies the manifest to your Kubernetes cluster, creating the necessary resources for MetalLB to function. 
+* This includes deploying the MetalLB controller and speaker components.
+
+<br>
+
+## Configure MetalLB in L2 mode
+* Create a configuration file within your 'local-nginx-deploy' folder called 'metallb-config.yml', with an IP range suitable for your local network. 
+
+### Finding Your IP Range
+On Windows
+* Open Command Prompt: Press the Windows key, type cmd, and hit Enter.
+* Run the ipconfig Command: Type `ipconfig` and press Enter. 
+* Look for the "Default Gateway" under your network connection. 
+  * This is your router's IP address.
+
+![alt text](./kube-images/d.png)
+
+From the ipconfig output, we can see the following details for your WiFi connection:
+
+* **IPv4 Address**: 192.168.1.114
+* **Subnet Mask**: 255.255.255.0
+* **Default Gateway**: 192.168.1.254
+
+### Calculating the IP Range
+* Given the subnet mask: 255.255.255.0,
+* Your IP range is within the 192.168.1.x range. 
+* Specifically, the usable IP addresses range from 192.168.1.1-192.168.1.254.
+
+<br>
+
+## Configure MetalLB & Apply
+* You can choose a subset of this range for MetalLB.
+* The usable IP addresses range from 192.168.1.1-192.168.1.254.
+
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: my-ip-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.1.1-192.168.1.254
+```
+
+* Apply the [metallb-config.yml](../k8s-yaml-definitions/local-nginx-deploy/metallb-config.yml) file.
+  * `kubectl apply -f metallb-config.yml`
+
+![alt text](./kube-images/e.png)
+
+<br>
+
+### Explanation
+IPAddressPool:
+* **apiVersion**: Specifies the API version for MetalLB resources.
+* **kind**: Defines the type of resource, which is IPAddressPool in this case.
+* **metadata**: Contains metadata about the resource, including its name (first-pool) and namespace (metallb-system).
+* **spec**: Specifies the details of the IP address pool, including the range of IP addresses (192.168.1.1-192.168.1.254) that MetalLB can use.
+
+L2Advertisement:
+* **apiVersion**: Specifies the API version for MetalLB resources.
+* **kind**: Defines the type of resource, which is L2Advertisement in this case.
+* **metadata**: Contains metadata about the resource, including its name (l2-advertisement) and namespace (metallb-system).
+
+> The IPAddressPool resource defines a pool of IP addresses that MetalLB can use to assign to services. The L2Advertisement resource configures MetalLB to announce these IP addresses using Layer 2 (L2) mode, making them accessible on the local network.
+
+<br> 
+
+## Apply your PV and PVC file
+
+```yaml
+kubectl apply -f mongodb-pv.yml
+kubectl apply -f mongodb-pvc.yml
+```
+
+<br>
+
+## Deploy the Database
+
+```yaml
+kubectl create -f mongodb-deploy.yml
+kubectl create -f mongodb-service.yml
+```
+
+## Deply Sparta App
+
+```yaml
+kubectl create -f nodejs-deploy.yml
+kubectl create -f nodejs-service.yml
+```
+
+## Enable Autoscaling (HPA)
+
+```yaml
+kubectl apply -f hpa.yml
+```
+
+<br>
+
+## Verify the Deployment
+* The output should show an EXTERNAL-IP assigned to sparta-app. 
+* You can access the app via this IP.
+
+```yaml
+kubectl get services
+```
+
+![alt text](./kube-images/f.png)
+
+<br>
+
+## Access Service
+* You can now see your app with 'localhost' in the search bar. 
+
+<br>
+
+
+# Delete & Create
+
+### Delete all at once:
+```bash
+kubectl delete service mongodb-svc && \
+kubectl delete service sparta-app-svc && \
+kubectl delete deployment mongodb-deployment && \
+kubectl delete deployment sparta-app-deployment && \
+kubectl delete pvc mongodb-pvc && \
+kubectl delete pv mongodb-pv && \
+kubectl delete -f hpa.yml && \
+kubectl delete -f metallb-config.yml
+```
+
+### Create all at once
+* `kubectl apply -f metallb-config.yml`
+* `kubectl apply -f app-lb-service.yml`
+* `kubectl apply -f mongodb-pv.yml`
+* `kubectl apply -f mongodb-pvc.yml`
+* `kubectl create -f mongodb-deploy.yml`
+* `kubectl create -f mongodb-service.yml`
+* `kubectl create -f nodejs-deploy.yml`
+* `kubectl create -f nodejs-service.yml`
+* `kubectl apply -f hpa.yml`
+
+```bash
+kubectl apply -f metallb-config.yml && kubectl apply -f mongodb-pv.yml && kubectl apply -f mongodb-pvc.yml && kubectl create -f mongodb-deploy.yml && kubectl create -f mongodb-service.yml && kubectl create -f nodejs-deploy.yml && kubectl create -f nodejs-service.yml && kubectl apply -f hpa.yml
+```
+
+### Check They're There
+* `kubectl get all`
+* `kubectl get pv`
+* `kubectl get pvc`
+* `kubectl get services`
+
+<br>

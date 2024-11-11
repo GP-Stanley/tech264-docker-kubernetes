@@ -1,14 +1,27 @@
----
+# ---
+#   apiVersion: v1
+#   kind: Service
+#   metadata:
+#     name: sparta-app-svc
+#     namespace: default
+#   spec:
+#     ports:
+#     - nodePort: 30003   # The port on each node where the service is exposed
+#       port: 80          # The port that the service listens on.
+#       targetPort: 3000  # The port on the pod that the service forwards traffic to.
+#     selector:
+#       app: sparta-app   # Label to match service to deployment
+#     type: NodePort  
+
 apiVersion: v1
 kind: Service
 metadata:
   name: sparta-app-svc
   namespace: default
 spec:
+  type: LoadBalancer  # Change NodePort to LoadBalancer to request an external IP from MetalLB
   ports:
-  - nodePort: 30003   # The port on each node where the service is exposed
-    port: 80          # The port that the service listens on.
-    targetPort: 3000  # The port on the pod that the service forwards traffic to.
+    - port: 80           # The port that the service listens on
+      targetPort: 3000   # The port on the pod that the service forwards traffic to
   selector:
-    app: sparta-app   # Label to match service to deployment
-  type: NodePort  
+    app: sparta-app      # Label to match service to deployment
