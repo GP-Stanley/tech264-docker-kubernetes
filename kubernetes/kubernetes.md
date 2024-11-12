@@ -169,6 +169,26 @@
     - [Delete all at once:](#delete-all-at-once-1)
     - [Create all at once](#create-all-at-once)
     - [Check They're There](#check-theyre-there-3)
+- [Local Stack](#local-stack)
+- [Setup minikube on a cloud instance running Ubuntu 22.04 LTS](#setup-minikube-on-a-cloud-instance-running-ubuntu-2204-lts)
+- [AWS EC2](#aws-ec2)
+  - [Provision Your Cloud Instance](#provision-your-cloud-instance)
+  - [Connect to Your Instance](#connect-to-your-instance)
+  - [Update System Packages](#update-system-packages)
+  - [Install MiniKube \& Binary](#install-minikube--binary)
+    - [Check Version](#check-version)
+  - [Install Docker](#install-docker)
+  - [Install Kubectl](#install-kubectl)
+  - [Start Minikube](#start-minikube)
+    - [Explanation](#explanation-6)
+- [Delete Minikube and all related resources from your cloud instance](#delete-minikube-and-all-related-resources-from-your-cloud-instance)
+  - [1. Stop and Delete Minikube Cluster](#1-stop-and-delete-minikube-cluster)
+  - [2. Uninstall Minikube](#2-uninstall-minikube)
+  - [3. Uninstall Kubectl](#3-uninstall-kubectl)
+  - [4. Uninstall Docker](#4-uninstall-docker)
+  - [5. Clean Up Docker Data](#5-clean-up-docker-data)
+  - [6. Verify Removal](#6-verify-removal)
+- [Deploy on three apps on one cloud instance running minikube](#deploy-on-three-apps-on-one-cloud-instance-running-minikube)
 
 <br>
 
@@ -2100,3 +2120,199 @@ kubectl apply -f metallb-config.yml && kubectl apply -f mongodb-pv.yml && kubect
 * `kubectl get services`
 
 <br>
+
+# Local Stack
+* LocalStack is an open-source tool that simulates AWS cloud services on a local machine, allowing developers to develop, test, and deploy cloud applications without needing an active AWS account or incurring AWS charges. 
+* It replicates a variety of AWS services, like S3, Lambda, DynamoDB, and more, locally, enabling developers to mimic their cloud infrastructure for testing and development.
+
+<br>
+
+# Setup minikube on a cloud instance running Ubuntu 22.04 LTS
+Task:
+Aim: Get minikube running on a cloud instance
+* Use a cloud instance, either:
+  * An AWS EC2 instance (size: t3a.small) or
+  * An Azure VM (size: standard_b2pls)
+  * Image: Ubuntu 22.04 LTS
+
+<br>
+
+# AWS EC2
+* Launch a t3a.small instance with Ubuntu 22.04 LTS as the AMI.
+
+## Provision Your Cloud Instance
+Launch an EC2 Instance:
+* Instance Type: t3a.small
+* AMI: Ubuntu 22.04 LTS
+* Security Group: Ensure ports 22 (SSH) and 8443 (Kubernetes API) are open.
+
+![alt text](./kube-images/sg.png)
+
+<br>
+
+## Connect to Your Instance
+* Navigate to .ssh folder.
+* Navigate to "Connect" on AWS and log in via key in .ssh folder. 
+
+## Update System Packages
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+## Install MiniKube & Binary
+```bash
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+```
+
+![alt text](./kube-images/curl.png)
+
+* Successfully downloaded the Minikube binary to your instance. 
+* The output shows that the file minikube-linux-amd64 was downloaded with a size of 99.0 MB.
+* Install the Minikube binary to make it executable: `sudo install minikube-linux-amd64 /usr/local/bin/minikube`. 
+
+### Check Version
+* `minikube version`
+
+![alt text](./kube-images/ver.png)
+
+<br>
+
+## Install Docker
+```bash
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+* Check the version:
+  * `docker --version`
+
+![alt text](./kube-images/vers.png)
+
+## Install Kubectl
+```bash
+curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/
+```
+
+![alt text](./kube-images/insta.png)
+
+* Check the version:
+  * `kubectl version --client`
+* This command will display the version of kubectl installed on your system. 
+* If you see the version information, it means kubectl has been installed correctly.
+
+![alt text](./kube-images/versi.png)
+
+<br>
+
+## Start Minikube
+```bash
+minikube start --driver=docker
+```
+
+![alt text](./kube-images/start.png)
+
+### Explanation
+* Minikube has successfully started on your cloud instance running Ubuntu 22.04 LTS. 
+* The output indicates that Minikube is up and running, and kubectl is configured to use the "minikube" cluster and "default" namespace by default.
+* Use kubectl to interact with your Minikube cluster.
+  * For example, you can check the status of your nodes and pods:
+  * `kubectl get nodes`
+  * `kubectl get pods -A`
+  * `kubectl get all`
+
+![alt text](./kube-images/kubectl-cmd.png)
+
+<br> 
+
+# Delete Minikube and all related resources from your cloud instance
+## 1. Stop and Delete Minikube Cluster
+* Stop the Minikube cluster and delete it.
+```bash
+minikube stop
+minikube delete
+```
+
+![alt text](./kube-images/stop.png)
+
+<br>
+
+## 2. Uninstall Minikube
+* Remove the Minikube binary.
+```bash
+sudo rm /usr/local/bin/minikube
+```
+
+## 3. Uninstall Kubectl
+* Remove the kubectl binary.
+```bash
+sudo rm /usr/local/bin/kubectl
+```
+
+## 4. Uninstall Docker
+```bash
+sudo apt-get purge -y docker-ce docker-ce-cli containerd.io
+sudo apt-get autoremove -y --purge docker-ce docker-ce-cli containerd.io
+```
+
+## 5. Clean Up Docker Data
+* Remove Docker data directories.
+```bash
+sudo rm -rf /var/lib/docker
+sudo rm -rf /var/lib/containerd
+```
+
+## 6. Verify Removal
+* Check that Minikube, kubectl, and Docker have been removed.
+```bash
+minikube version
+kubectl version --client
+docker --version
+```
+
+![alt text](./kube-images/deletev.png)
+
+<br> 
+
+# Deploy on three apps on one cloud instance running minikube
+Task:
+* **Aim**: Deploy three apps on minikube that will all run at the same time and be exposed to the outside world at different endpoints.
+
+First app deployment:
+* Should use a NodePort service at NodePort 30001
+* Use image daraymonsta/nginx-257:dreamteam with container port 80 (or use your own image)
+* App container should have 5 replicas
+* Use Nginx web server installed on the same cloud instance and configure reverse proxy to expose the app:
+* App should be accessed from the outside on <instance's public IP address> (default HTTP port)
+
+Second app deployment:
+* Use a LoadBalancer service at port 9000, NodePort of LoadBalancer service 30002
+* Use minikube tunnel to emulate a load balancer on the same cloud instance
+* Use image daraymonsta/tech201-nginx-auto:v1 with container port 80 (or use your own image)
+* App container should have 2 replicas
+* Use Nginx web server installed on the same cloud instance and configure reverse proxy to expose the app:
+* App should be accessed from the outside on <instance's public IP address>:9000
+
+Third app deployment:
+* Deploy hello-minikube as the third app.
+* Use official documentation to help: https://kubernetes.io/docs/tutorials/hello-minikube/
+* Use a LoadBalancer service at port 8080, NodePort of LoadBalancer service does not
+* need to be specified
+* Use minikube tunnel to emulate the load balancer on the same cloud instance (use the same tunnel service you already used for the second app's deployment)
+* Use Nginx web server installed on the same cloud instance and configure reverse proxy to expose the app:
+  * App should be accessed from the outside on <instance's public IP address>/hello
+
+In your documentation, include:
+* Specifics on how and why use minikube tunnel
+* How you cleanup and remove each deployment
+* How to get Kubernetes working again after restarting the cloud instance
+
+<br>
+
