@@ -188,7 +188,10 @@
   - [4. Uninstall Docker](#4-uninstall-docker)
   - [5. Clean Up Docker Data](#5-clean-up-docker-data)
   - [6. Verify Removal](#6-verify-removal)
+- [Tasks not yet done:](#tasks-not-yet-done)
 - [Deploy on three apps on one cloud instance running minikube](#deploy-on-three-apps-on-one-cloud-instance-running-minikube)
+- [Create Bash script to provision minikube](#create-bash-script-to-provision-minikube)
+- [Use Kubernetes to deploy the Sparta test app in the cloud](#use-kubernetes-to-deploy-the-sparta-test-app-in-the-cloud)
 
 <br>
 
@@ -2281,6 +2284,10 @@ docker --version
 
 <br> 
 
+# Tasks not yet done:
+
+<br>
+
 # Deploy on three apps on one cloud instance running minikube
 Task:
 * **Aim**: Deploy three apps on minikube that will all run at the same time and be exposed to the outside world at different endpoints.
@@ -2316,3 +2323,25 @@ In your documentation, include:
 
 <br>
 
+# Create Bash script to provision minikube
+Task:
+The Bash script should...
+* work:
+  * on a fresh AND not-so-fresh instance
+  * when run logged in as ubuntu user AND as user data
+* provision:
+  * Docker and minikube
+  * Any minikube addons needed
+  * Nginx and setup the reverse proxy to expose the required NodePort when going to the public IP of the instance
+
+<br>
+
+# Use Kubernetes to deploy the Sparta test app in the cloud
+Task:
+* Deploy containerised 2-tier deployment (app and database) on a single VM using Minikube
+* Database should use a PV of 100 MB
+* Use HPA to scale the app, min 2, max 10 replicas - load test to check it works
+* Use NodePort service and Nginx reverse proxy to expose the app service to port 80 of the instance's public IP
+* Make sure that minikube start happens automatically on re-start of the instance
+
+<br>
