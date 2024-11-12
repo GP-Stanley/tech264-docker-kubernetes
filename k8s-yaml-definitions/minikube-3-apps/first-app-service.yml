@@ -1,13 +1,14 @@
-# first-app-service.yaml
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: first-app-service
+  name: sparta-app-svc-2
+  namespace: default
 spec:
-  type: NodePort
-  selector:
-    app: first-app
   ports:
-  - port: 80
-    targetPort: 80
-    nodePort: 30001
+    - protocol: TCP
+      port: 30002           # This is the port your clients will use.
+      targetPort: 3000       # This is the port your application is running on.
+  selector:
+    app: sparta-app-2        # Label to match service to deployment
+  type: LoadBalancer

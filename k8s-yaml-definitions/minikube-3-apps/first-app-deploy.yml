@@ -1,20 +1,23 @@
-apiVersion: apps/v1
-kind: Deployment
+---
+# SPARTA APP DEPLOYMENT
+apiVersion: apps/v1  # specify api to use for deployment
+kind : Deployment  # kind of service/object you want to create
 metadata:
-  name: first-app
+  name: app-deployment-2
 spec:
-  replicas: 5
   selector:
     matchLabels:
-      app: first-app
+      app: sparta-app-2 # look for this labe/tag to match the k8n service
+
+  # Creaate a ReplicaSet with instances/pods
+  replicas: 5
   template:
     metadata:
       labels:
-        app: first-app
+        app: sparta-app-2
     spec:
       containers:
-      - name: first-app
-        image: daraymonsta/nginx-257:dreamteam
+      - name: sparta-app-2
+        image:  shonifari8/sparta-app:v1
         ports:
-        - containerPort: 80
-
+        - containerPort: 3000
