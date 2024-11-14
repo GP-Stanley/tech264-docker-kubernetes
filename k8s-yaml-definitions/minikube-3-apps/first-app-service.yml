@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: sparta-app-svc-2
+  name: sparta-app-svc-1
   namespace: default
 spec:
   ports:
-    - protocol: TCP
-      port: 30002           # This is the port your clients will use.
-      targetPort: 3000       # This is the port your application is running on.
+    - nodePort: 30001  # External port on the host for accessing the service
+      port: 3000        # Internal port inside the container
+      targetPort: 3000  # Port where the app is running in the pod
   selector:
-    app: sparta-app-2        # Label to match service to deployment
-  type: LoadBalancer
+    app: sparta-app-1  # Label to match service to deployment
+  type: NodePort

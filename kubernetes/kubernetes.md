@@ -190,6 +190,17 @@
   - [6. Verify Removal](#6-verify-removal)
 - [Tasks not yet done:](#tasks-not-yet-done)
 - [Deploy on three apps on one cloud instance running minikube](#deploy-on-three-apps-on-one-cloud-instance-running-minikube)
+- [Using Terraform: Infrastructure Setup for Minikube Deployment](#using-terraform-infrastructure-setup-for-minikube-deployment)
+  - [1. AWS Provider Configuration](#1-aws-provider-configuration)
+  - [2. Security Group Creation](#2-security-group-creation)
+  - [3. Security Group Ingress Rules](#3-security-group-ingress-rules)
+    - [Allow SSH (Port 22)](#allow-ssh-port-22)
+    - [Allow HTTP (Port 80)](#allow-http-port-80)
+    - [Allow HTTP on Port 9000](#allow-http-on-port-9000)
+    - [Allow All Outbound Traffic](#allow-all-outbound-traffic)
+  - [4. EC2 Instance Configuration](#4-ec2-instance-configuration)
+- [Variables](#variables)
+- [Output](#output)
   - [Minikube Deployment with NodePort and Nginx Reverse Proxy](#minikube-deployment-with-nodeport-and-nginx-reverse-proxy)
     - [Step 1: Define the Kubernetes Service with NodePort](#step-1-define-the-kubernetes-service-with-nodeport)
     - [Step 2: Apply the Kubernetes Service Configuration](#step-2-apply-the-kubernetes-service-configuration)
@@ -207,7 +218,27 @@
     - [Step 5: Test and Reload Nginx Configuration](#step-5-test-and-reload-nginx-configuration-1)
     - [Step 6: Access Your Application](#step-6-access-your-application-1)
 - [Create Bash script to provision minikube](#create-bash-script-to-provision-minikube)
+  - [Key Concepts](#key-concepts)
+    - [Why We Need to Restart the Script with Docker Group Permissions](#why-we-need-to-restart-the-script-with-docker-group-permissions)
+    - [Effect of sg docker "$0"](#effect-of-sg-docker-0)
+    - [Why This Is Necessary](#why-this-is-necessary)
+    - [Why We Avoid Running Minikube as Root](#why-we-avoid-running-minikube-as-root)
+  - [Overview of Steps](#overview-of-steps)
+- [1. Installing and Configuring Docker](#1-installing-and-configuring-docker)
+  - [Adding the ubuntu User to the Docker Group](#adding-the-ubuntu-user-to-the-docker-group)
+- [2. Installing and Configuring Minikube](#2-installing-and-configuring-minikube)
+- [3. Starting Minikube as the ubuntu User](#3-starting-minikube-as-the-ubuntu-user)
+  - [Breakdown of the code](#breakdown-of-the-code)
+- [4. Installing and Configuring Nginx](#4-installing-and-configuring-nginx)
+- [Final Output and Status](#final-output-and-status)
 - [Use Kubernetes to deploy the Sparta test app in the cloud](#use-kubernetes-to-deploy-the-sparta-test-app-in-the-cloud)
+  - [Objectives](#objectives)
+- [Provisioning Script for Kubernetes Metrics Server and Application Deployment](#provisioning-script-for-kubernetes-metrics-server-and-application-deployment)
+  - [Step 1: Apply Metrics Server Components](#step-1-apply-metrics-server-components)
+  - [Step 2: Patch the Metrics Server Deployment](#step-2-patch-the-metrics-server-deployment)
+- [Step 3: Restart the Metrics Server Deployment](#step-3-restart-the-metrics-server-deployment)
+- [Step 4: Apply Application Deployment](#step-4-apply-application-deployment)
+- [Step 5: Display All Resources](#step-5-display-all-resources)
 
 <br>
 
@@ -2339,6 +2370,208 @@ In your documentation, include:
 
 <br>
 
+# Using Terraform: Infrastructure Setup for Minikube Deployment
+
+## 1. AWS Provider Configuration
+The provider block defines the AWS region where your infrastructure will be created.
+```bash
+# Provider
+provider "aws" {
+  # Which region we use
+  region = "eu-west-1"
+}
+```
+
+* **region**: The region to deploy the resources (in this case, eu-west-1).
+
+## 2. Security Group Creation
+This block defines a security group for the Minikube EC2 instance, which controls the inbound and outbound traffic.
+
+```bash
+# Security group
+resource "aws_security_group" "minikube_sg" {
+  name = var.sg_name
+  # Tags
+  tags = {
+    Name = var.sg_name
+  }
+}
+```
+
+* **name**: The security group name is provided by the variable sg_name.
+* **tags**: The security group is tagged with the same name (sg_name) for identification.
+
+## 3. Security Group Ingress Rules
+These blocks define the rules for allowing inbound traffic to the EC2 instance. Each rule specifies which ports should be open for incoming traffic.
+
+### Allow SSH (Port 22)
+
+```bash
+resource "aws_vpc_security_group_ingress_rule" "allow_ssh_22" {
+  security_group_id = aws_security_group.minikube_sg.id
+  from_port         = 22
+  ip_protocol       = "tcp"
+  to_port           = 22
+  cidr_ipv4         = var.vpc_ssh_inbound_cidr
+  tags = {
+    Name = "Allow_SSH"
+  }
+}
+```
+
+* **from_port**: Allows traffic on port 22 (SSH).
+* **cidr_ipv4**: Restricts access to the specified CIDR block (provided by vpc_ssh_inbound_cidr).
+
+### Allow HTTP (Port 80)
+
+```bash
+resource "aws_vpc_security_group_ingress_rule" "allow_http_80" {
+  security_group_id = aws_security_group.minikube_sg.id
+  from_port         = 80
+  ip_protocol       = "tcp"
+  to_port           = 80
+  cidr_ipv4         = var.vpc_ssh_inbound_cidr
+  tags = {
+    Name = "Allow_http"
+  }
+}
+```
+
+* **from_port**: Allows traffic on port 80 (HTTP).
+
+### Allow HTTP on Port 9000
+
+```bash
+resource "aws_vpc_security_group_ingress_rule" "allow_http_9000" {
+  security_group_id = aws_security_group.minikube_sg.id
+  from_port         = 9000
+  ip_protocol       = "tcp"
+  to_port           = 9000
+  cidr_ipv4         = var.vpc_ssh_inbound_cidr
+  tags = {
+    Name = "Allow_9000"
+  }
+}
+```
+
+* **from_port**: Allows traffic on port 9000 (used by your Minikube service or Nginx proxy).
+
+### Allow All Outbound Traffic
+
+```bash
+resource "aws_vpc_security_group_egress_rule" "allow_out_all" {
+  security_group_id = aws_security_group.minikube_sg.id
+  ip_protocol       = "All"
+  cidr_ipv4         = var.vpc_ssh_inbound_cidr
+  tags = {
+    Name = "Allow_Out_all"
+  }
+}
+```
+
+* **egress rule**: Allows all outbound traffic from the EC2 instance.
+
+<br>
+
+## 4. EC2 Instance Configuration
+This block creates an EC2 instance that will run the Minikube setup.
+
+```bash
+# Resource to create
+resource "aws_instance" "minikube_instance" {
+  # AMI ID ami-0c1c30571d2dae5c9 (for ubuntu 22.04 lts)
+  ami = var.app_ami_id
+
+  instance_type = var.instance_type
+
+  # Public ip
+  associate_public_ip_address = var.associate_pub_ip
+
+  # Security group
+  vpc_security_group_ids = [aws_security_group.minikube_sg.id]
+
+  # SSH Key pair
+  key_name = var.ssh_key_name
+
+  # Name the resource
+  tags = {
+    Name = var.instance_name
+  }
+}
+```
+
+* **ami**: The AMI ID for the Ubuntu 22.04 LTS image (provided via variable app_ami_id).
+* **instance_type**: The type of EC2 instance to be created (provided via instance_type variable).
+* **associate_public_ip_address**: Whether the instance should be assigned a public IP (controlled by associate_pub_ip variable).
+* **vpc_security_group_ids**: Attaches the previously created security group (minikube_sg) to the EC2 instance.
+* **key_name**: The SSH key used to access the EC2 instance (ssh_key_name).
+* **tags**: Tags the EC2 instance with a name (instance_name).
+
+<br>
+
+# Variables
+The variables used in the code are placeholders that need to be defined in a terraform.tfvars or similar file. Examples of variables:
+
+```bash
+variable "sg_name" {
+  type        = string
+  description = "The name of the security group"
+}
+
+variable "vpc_ssh_inbound_cidr" {
+  type        = string
+  description = "CIDR block for inbound SSH access"
+}
+
+variable "app_ami_id" {
+  type        = string
+  description = "AMI ID for the EC2 instance"
+}
+
+variable "instance_type" {
+  type        = string
+  description = "The EC2 instance type"
+}
+
+variable "associate_pub_ip" {
+  type        = bool
+  description = "Whether to associate a public IP"
+}
+
+variable "ssh_key_name" {
+  type        = string
+  description = "The SSH key name"
+}
+
+variable "instance_name" {
+  type        = string
+  description = "The name tag for the EC2 instance"
+}
+```
+
+<br>
+
+# Output
+* The output file in Terraform captures and displays the results of the deployment, such as the public IP address of the EC2 instance. 
+* This is especially useful for accessing the instance remotely or configuring other services. 
+* By defining an output block in Terraform, we can ensure that the public IP address of the EC2 instance is easily accessible after the infrastructure has been created. 
+* This IP address is crucial for accessing the Minikube deployment externally, whether it’s for testing or production purposes. 
+
+Below is an example of how to capture and display the public IP address of the EC2 instance:
+
+```bash
+output "instance_public_ip" {
+  value = aws_instance.minikube_instance.public_ip
+  description = "The public IP address of the Minikube EC2 instance"
+}
+```
+
+With this output, after applying the Terraform configuration, you can retrieve the public IP address of the instance, which will allow you to access the Minikube services running inside the EC2 instance, such as through a web browser or via API calls.
+
+> This Terraform code creates the necessary security groups and EC2 instance to run your Minikube deployment, allowing inbound access for SSH (port 22), HTTP (port 80), and port 9000 for reverse proxy access. It also defines outbound traffic rules and associates the instance with a public IP for external access.
+
+<br>
+
 ## Minikube Deployment with NodePort and Nginx Reverse Proxy
 This guide explains how to set up a Minikube deployment with a NodePort service and configure Nginx to forward traffic to your service.
 * You can manually create an EC" Instance or via Terraform. 
@@ -2567,6 +2800,142 @@ The Bash script should...
 
 <br>
 
+## Key Concepts
+### Why We Need to Restart the Script with Docker Group Permissions
+* Adding the ubuntu user to the docker group doesn't take effect immediately.
+* Normally, group changes require the user to log out and log back in.
+* Since the script runs in a **non-interactive environment**, we can't rely on logout/login.
+* We use the `exec sg docker "$0"` command to **restart the script** with the **new group permissions**.
+
+### Effect of sg docker "$0"
+* This command **re-runs the script in a new shell** session where the **ubuntu user is part of the docker group**.
+
+### Why This Is Necessary
+* Minikube needs **non-root Docker access** to start containers.
+* **Re-running the script** ensures the **ubuntu user** has **immediate Docker access without logging out and back in**, allowing Minikube to start successfully.
+
+### Why We Avoid Running Minikube as Root
+* **Security Concerns**: Running Minikube as root gives all Kubernetes containers and components root-level access, creating security risks.
+* **Docker Permission Management**: The Docker daemon runs as root, but giving docker group access to the ubuntu user allows Minikube to manage containers without root permissions.
+* **Environment Consistency**: Using a non-root user aligns with Kubernetes' principle of running applications with the minimum necessary privileges, preventing unintentional system changes and limiting the impact of misconfigurations.
+
+> By re-running the script with docker group permissions for the ubuntu user, we ensure Minikube operates with restricted privileges, following best practices for security and maintainability.
+
+<br>
+
+## Overview of Steps
+1. **Provision Docker**: Installs Docker and configures permissions for the ubuntu user.
+2. **Provision Minikube**: Installs Minikube and sets it to use Docker as its driver.
+3. **Start Minikube**: Starts Minikube as the ubuntu user.
+4. **Provision Nginx**: Installs and configures Nginx to act as a reverse proxy to Minikube’s exposed service.
+
+<br>
+
+# 1. Installing and Configuring Docker
+The first part of the script updates system packages, installs Docker, and adds the ubuntu user to the Docker group.
+
+```yaml
+# Update and upgrade system packages
+sudo apt-get update -y
+sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
+
+# Install dependencies and add Docker's GPG key
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add Docker's repository to Apt sources
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+$(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker packages
+sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+## Adding the ubuntu User to the Docker Group
+After Docker is installed, the ubuntu user is added to the Docker group to allow non-root access to Docker. The script then re-executes itself using exec sg docker "$0" to apply the group change without requiring a logout/login.
+
+```yaml
+# Check if the 'ubuntu' user is in the docker group; add if not
+if ! groups ubuntu | grep -q '\bdocker\b'; then
+    sudo usermod -aG docker ubuntu
+    echo "Restarting script to apply Docker group permissions..."
+    exec sg docker "$0"
+    exit
+fi
+```
+
+<br>
+
+# 2. Installing and Configuring Minikube
+The script downloads and installs Minikube, setting it to use Docker as the driver.
+
+```yaml
+# Download Minikube binary
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+
+# Install Minikube binary
+sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+
+# Set Docker as the Minikube driver
+minikube config set driver docker
+```
+
+# 3. Starting Minikube as the ubuntu User
+To ensure Minikube runs with the correct permissions, it is started as the ubuntu user. This section runs the minikube start command and exports Minikube's IP address for later use.
+
+```yaml
+sudo -u ubuntu -i bash <<'EOF'
+echo "Starting Minikube as 'ubuntu' user..."
+minikube start
+minikube status
+
+# Get Minikube IP
+MINIKUBE_IP=$(minikube ip)
+echo "Exported Minikube IP: $MINIKUBE_IP"
+EOF
+```
+
+## Breakdown of the code
+* `**sudo -u ubuntu -i bash**`: This part of the command switches to the ubuntu user and initiates an interactive shell (-i) as ubuntu, which allows us to run commands in that user’s environment.
+* `**<<'EOF'**`: This is a "Here Document" syntax, which allows us to run multiple commands within the sudo session as ubuntu. Everything between `<<'EOF'` and the closing EOF is executed in the ubuntu user’s environment.
+* `**echo "Starting Minikube as 'ubuntu' user..."**`: Prints a message indicating that Minikube is starting under the ubuntu user.
+* `**minikube start**`: Starts the Minikube cluster, using Docker as the container driver (which we configured earlier). By running this as ubuntu, it uses ubuntu’s environment and permissions.
+* `**minikube status**`: Checks and prints the current status of Minikube, confirming that it’s running and which components are active.
+* `**MINIKUBE_IP=$**`(minikube ip): Retrieves Minikube’s IP address and assigns it to the MINIKUBE_IP variable. This IP is useful for accessing Minikube services externally, such as setting up a reverse proxy.
+* `**echo "Exported Minikube IP: $MINIKUBE_IP"**`: Prints the exported Minikube IP to confirm that it’s been successfully retrieved and stored.
+* `**EOF**`: This signifies the end of the "Here Document," meaning all commands up to this point will be executed as the ubuntu user within the sudo -u ubuntu session.
+
+This block:
+* Switches to the ubuntu user.
+* Starts Minikube as ubuntu, verifies its status, retrieves its IP address, and prints it.V
+
+<br>
+
+# 4. Installing and Configuring Nginx
+The script installs Nginx and sets it up as a reverse proxy. It updates the Nginx configuration to proxy traffic from the server’s IP to the Minikube NodePort.
+
+```yaml
+# Install Nginx
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+
+# Configure Nginx reverse proxy to Minikube IP and port
+sudo sed -i "s|try_files \$uri \$uri/ =404;|proxy_pass http://$MINIKUBE_IP:30001;|" /etc/nginx/sites-available/default
+
+# Check for syntax errors and restart Nginx
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+# Final Output and Status
+* The script outputs Minikube and Nginx statuses and configurations at each stage, ensuring each component is set up correctly before moving to the next. 
+* This structured approach ensures Docker permissions are applied effectively, Minikube is correctly configured to use Docker, and Nginx routes traffic to Minikube services.
+
+<br>
+
 # Use Kubernetes to deploy the Sparta test app in the cloud
 Task:
 * Deploy containerised 2-tier deployment (app and database) on a single VM using Minikube
@@ -2574,5 +2943,68 @@ Task:
 * Use HPA to scale the app, min 2, max 10 replicas - load test to check it works
 * Use NodePort service and Nginx reverse proxy to expose the app service to port 80 of the instance's public IP
 * Make sure that minikube start happens automatically on re-start of the instance
+
+<br>
+
+## Objectives
+* Deploy containerised 2-tier deployment (app and database) on a single VM using Minikube
+* Database should use a PV of 100 MB
+* Use HPA to scale the app, min 2, max 10 replicas - load test to check it works
+* Use NodePort service and Nginx reverse proxy to expose the app service to port 80 of the instance's public IP
+* Make sure that minikube start happens automatically on re-start of the instance
+
+# Provisioning Script for Kubernetes Metrics Server and Application Deployment
+This script uses Minikube’s kubectl command to provision and configure the Kubernetes Metrics Server, then deploys an application using a specified YAML file.
+
+## Step 1: Apply Metrics Server Components
+```yaml
+minikube kubectl -- apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+``` 
+Explanation:
+* Downloads and applies the YAML manifest for the Kubernetes Metrics Server from the official repository. 
+* The Metrics Server is a cluster add-on that collects resource usage data, such as CPU and memory, from nodes and pods, making it available for tools like kubectl top.
+
+## Step 2: Patch the Metrics Server Deployment
+
+```yaml
+minikube kubectl -- patch deployment metrics-server -n kube-system --type='json' -p='[
+  {
+    "op": "add",
+    "path": "/spec/template/spec/containers/0/args/-",
+    "value": "--kubelet-insecure-tls"
+  }
+]'
+```
+Explanation: 
+* Patches the Metrics Server deployment to add an argument that allows insecure TLS connections to the Kubelet. 
+* This is often needed for local environments or self-signed certificates where secure Kubelet connections might not be available.
+  * **Deployment**: `metrics-server`
+  * **Namespace**: `kube-system`
+  * **Patch Operation**: Adds the `--kubelet-insecure-tls` argument to the args list of the container specification, allowing it to bypass TLS certificate verification.
+
+# Step 3: Restart the Metrics Server Deployment
+```yaml
+minikube kubectl -- rollout restart deployment metrics-server -n kube-system
+```
+Explanation: 
+* Restarts the Metrics Server deployment in the kube-system namespace. 
+* This restart ensures that the patched configuration takes effect.
+
+# Step 4: Apply Application Deployment
+```yaml
+minikube kubectl -- apply -f app-deploy.yml
+```
+Explanation: 
+* Deploys an application to the Kubernetes cluster using a configuration file (app-deploy.yml). 
+* This YAML file should define the application’s deployment specifications, such as replicas, image, ports, etc.
+
+# Step 5: Display All Resources
+```yaml
+minikube kubectl -- get all
+```
+Explanation: 
+* Lists all Kubernetes resources (pods, services, deployments, etc.) in the current namespace, providing an overview of the cluster's current state and ensuring that the Metrics Server and application deployment are running correctly.
+
+> This script automates the provisioning of the Metrics Server and application, applying essential configurations for both and verifying that all resources are up and running.
 
 <br>
