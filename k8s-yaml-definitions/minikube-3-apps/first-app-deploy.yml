@@ -7,7 +7,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: sparta-app-2 # look for this labe/tag to match the k8n service
+      app: sparta-app-2 # look for this label/tag to match the k8s service
 
   # Creaate a ReplicaSet with instances/pods
   replicas: 5

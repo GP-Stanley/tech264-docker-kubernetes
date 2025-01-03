@@ -1,0 +1,21 @@
+# Use the Node.js v20 image
+FROM node:20-alpine3.20
+
+# Set the maintainer label
+LABEL maintainer="georgiastanley98@gmail.com"
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy the app folder and package.json files to the container
+COPY app /usr/src/app
+COPY package*.json ./
+
+# Install app dependencies
+RUN npm install
+
+# Expose the port the app will run on
+EXPOSE 3000
+
+# Set the command to run the app
+CMD ["npm", "start"]

@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  # MongoDB service
+  mongo:
+    image: mongo:7.0.6         # Use the official MongoDB image
+    container_name: mongo_db
+    ports:
+      - "27017:27017"         # Expose MongoDB port
+    volumes:
+      - mongo-data:/data/db   # Persist MongoDB data with a Docker volume
+    command: --bind_ip_all    # Allow connections from other containers
+
+  app:
+    image: gina98/sparta-test-app:v1  # Replace with your Docker Hub image name
+    container_name: app
+    depends_on:
+      - mongo                 # Ensures MongoDB starts before the app
+    ports:
+      - "3000:3000"           # Expose app on port 3000
+    environment:
+      - DB_HOST=mongodb://mongo:27017/posts         # Set MongoDB host environment variable
+      - DB_PORT=27017         # Optional: set MongoDB port if app needs it
+    command: sh -c "node seeds/seed.js && npm start"
+#    command: npm start        # Start the app with npm start
+
+volumes:
+  mongo-data:                 # Declare volume for MongoDB data persistence
